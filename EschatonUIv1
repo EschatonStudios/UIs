@@ -33,6 +33,25 @@ local function loadSettings(fileName)
     return {}
 end
 
+local function formatKeyName(keyName)
+    local shortcuts = {
+        ["RightShift"] = "RShift",
+        ["LeftShift"] = "LShift",
+        ["RightControl"] = "RCtrl",
+        ["LeftControl"] = "LCtrl",
+        ["RightAlt"] = "RAlt",
+        ["LeftAlt"] = "LAlt"
+    }
+    
+    if shortcuts[keyName] then
+        return shortcuts[keyName]
+    elseif string.len(keyName) > 5 then
+        return string.sub(keyName, 1, 5)
+    else
+        return keyName
+    end
+end
+
 -- Функция создания UI
 function UILibrary.new(config)
     local ui = {}
@@ -44,7 +63,7 @@ function UILibrary.new(config)
     -- Создание основного ScreenGui
     local EschatonUI = Instance.new("ScreenGui")
     EschatonUI.Name = "EschatonUI"
-    EschatonUI.Parent = CoreGui
+    EschatonUI.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
     EschatonUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     EschatonUI.ResetOnSpawn = false
 
@@ -271,6 +290,21 @@ function UILibrary.new(config)
             tabContainer.Visible = true
             currentTab = name
         end)
+        
+        -- Обработка наведения мыши
+        TabButton.MouseEnter:Connect(function()
+            if currentTab ~= name then
+                TabButton.BackgroundTransparency = 0.980
+                ImageButton.ImageColor3 = Color3.fromRGB(255, 255, 255)
+            end
+        end)
+        
+        TabButton.MouseLeave:Connect(function()
+            if currentTab ~= name then
+                TabButton.BackgroundTransparency = 1.000
+                ImageButton.ImageColor3 = Color3.fromRGB(255, 255, 255)
+            end
+        end)
 
         -- Создание Section
         function tab:CreateSection(name)
@@ -464,6 +498,247 @@ function UILibrary.new(config)
                 elementY = elementY + 0.25
                 updateSectionSize()
             end
+            
+            -- CreateBind
+            function section:CreateBind(name, defaultKey, callback, saveId)
+                local saveKey = saveId or name
+                local currentKey = settings[saveKey] or defaultKey
+                
+                local BindZone = Instance.new("Frame")
+                BindZone.Name = "BindZone"
+                BindZone.Parent = sectionFrame
+                BindZone.Active = true
+                BindZone.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                BindZone.BackgroundTransparency = 1.000
+                BindZone.BorderColor3 = Color3.fromRGB(0, 0, 0)
+                BindZone.BorderSizePixel = 0
+                BindZone.Position = UDim2.new(0, 0, elementY, 0)
+                BindZone.Size = UDim2.new(0, 195, 0, 30)
+
+                local BindName = Instance.new("TextLabel")
+                BindName.Name = "BindName"
+                BindName.Parent = BindZone
+                BindName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                BindName.BackgroundTransparency = 1.000
+                BindName.BorderColor3 = Color3.fromRGB(0, 0, 0)
+                BindName.BorderSizePixel = 0
+                BindName.Position = UDim2.new(0.0516529568, 0, 0.233005777, 0)
+                BindName.Size = UDim2.new(0, 18, 0, 16)
+                BindName.Font = Enum.Font.SourceSansBold
+                BindName.Text = name
+                BindName.TextColor3 = Color3.fromRGB(255, 255, 255)
+                BindName.TextSize = 13.000
+                BindName.TextXAlignment = Enum.TextXAlignment.Left
+
+                local Bind = Instance.new("TextButton")
+                Bind.Name = "Bind"
+                Bind.Parent = BindZone
+                Bind.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                Bind.BorderColor3 = Color3.fromRGB(0, 0, 0)
+                Bind.BorderSizePixel = 0
+                Bind.Position = UDim2.new(0.533333361, 0, 0.233005777, 0)
+                Bind.Size = UDim2.new(0, 70, 0, 16)
+                Bind.Font = Enum.Font.SourceSansBold
+                Bind.Text = formatKeyName(currentKey.Name)
+                Bind.TextColor3 = Color3.fromRGB(255, 255, 255)
+                Bind.TextSize = 12.000
+                Bind.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+
+                local UICorner_12 = Instance.new("UICorner")
+                UICorner_12.CornerRadius = UDim.new(0, 5)
+                UICorner_12.Parent = Bind
+
+                local binding = false
+                Bind.MouseButton1Click:Connect(function()
+                    binding = true
+                    Bind.Text = "..."
+                end)
+
+                UserInputService.InputBegan:Connect(function(input, processed)
+                    if binding and not processed and input.KeyCode ~= Enum.KeyCode.Unknown then
+                        currentKey = input.KeyCode
+                        settings[saveKey] = currentKey
+                        saveSettings(config.FileName or "eschaton_settings.json", settings)
+                        Bind.Text = formatKeyName(currentKey.Name)
+                        binding = false
+                        if callback then callback(currentKey) end
+                    end
+                end)
+
+                elementY = elementY + 0.25
+                updateSectionSize()
+            end
+            
+            -- CreateInput
+            function section:CreateInput(name, placeholder, default, callback, saveId)
+                local saveKey = saveId or name
+                local currentValue = settings[saveKey] or default or ""
+                
+                local InputZone = Instance.new("Frame")
+                InputZone.Name = "InputZone"
+                InputZone.Parent = sectionFrame
+                InputZone.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                InputZone.BackgroundTransparency = 1.000
+                InputZone.BorderColor3 = Color3.fromRGB(0, 0, 0)
+                InputZone.BorderSizePixel = 0
+                InputZone.Position = UDim2.new(0, 0, elementY, 0)
+                InputZone.Size = UDim2.new(0, 195, 0, 40)
+
+                local Input = Instance.new("TextBox")
+                Input.Name = "Input"
+                Input.Parent = InputZone
+                Input.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                Input.BorderColor3 = Color3.fromRGB(0, 0, 0)
+                Input.BorderSizePixel = 0
+                Input.Position = UDim2.new(0.0358974375, 0, 0.3416664, 0)
+                Input.Size = UDim2.new(0, 173, 0, 20)
+                Input.Font = Enum.Font.SourceSans
+                Input.PlaceholderText = placeholder or "Input..."
+                Input.PlaceholderColor3 = Color3.fromRGB(104, 104, 104)
+                Input.Text = currentValue
+                Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+                Input.TextSize = 14.000
+                Input.TextXAlignment = Enum.TextXAlignment.Left
+
+                local UICorner_11 = Instance.new("UICorner")
+                UICorner_11.Parent = Input
+
+                local InputName = Instance.new("TextLabel")
+                InputName.Name = "InputName"
+                InputName.Parent = InputZone
+                InputName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                InputName.BackgroundTransparency = 1.000
+                InputName.BorderColor3 = Color3.fromRGB(0, 0, 0)
+                InputName.BorderSizePixel = 0
+                InputName.Position = UDim2.new(0.0465249084, 0, 0.0751892105, 0)
+                InputName.Size = UDim2.new(0, 18, 0, 9)
+                InputName.Font = Enum.Font.SourceSans
+                InputName.Text = name
+                InputName.TextColor3 = Color3.fromRGB(255, 255, 255)
+                InputName.TextSize = 11.000
+                InputName.TextXAlignment = Enum.TextXAlignment.Left
+
+                Input:GetPropertyChangedSignal("Text"):Connect(function()
+                    settings[saveKey] = Input.Text
+                    saveSettings(config.FileName or "eschaton_settings.json", settings)
+                    if callback then callback(Input.Text) end
+                end)
+
+                elementY = elementY + 0.33
+                updateSectionSize()
+            end
+            
+            -- CreateSlider
+            function section:CreateSlider(name, min, max, default, callback, saveId)
+                local saveKey = saveId or name
+                local currentValue = settings[saveKey] or default
+                
+                local SliderZone = Instance.new("Frame")
+                SliderZone.Name = "SliderZone"
+                SliderZone.Parent = sectionFrame
+                SliderZone.Active = true
+                SliderZone.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                SliderZone.BackgroundTransparency = 1.000
+                SliderZone.BorderColor3 = Color3.fromRGB(0, 0, 0)
+                SliderZone.BorderSizePixel = 0
+                SliderZone.Position = UDim2.new(0, 0, elementY, 0)
+                SliderZone.Size = UDim2.new(0, 195, 0, 30)
+
+                local ToggleName_3 = Instance.new("TextLabel")
+                ToggleName_3.Name = "ToggleName"
+                ToggleName_3.Parent = SliderZone
+                ToggleName_3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                ToggleName_3.BackgroundTransparency = 1.000
+                ToggleName_3.BorderColor3 = Color3.fromRGB(0, 0, 0)
+                ToggleName_3.BorderSizePixel = 0
+                ToggleName_3.Position = UDim2.new(0.0516529568, 0, 0.233005777, 0)
+                ToggleName_3.Size = UDim2.new(0, 18, 0, 16)
+                ToggleName_3.Font = Enum.Font.SourceSansBold
+                ToggleName_3.Text = name
+                ToggleName_3.TextColor3 = Color3.fromRGB(255, 255, 255)
+                ToggleName_3.TextSize = 13.000
+                ToggleName_3.TextXAlignment = Enum.TextXAlignment.Left
+
+                local SliderLine = Instance.new("TextButton")
+                SliderLine.Name = "SliderLine"
+                SliderLine.Parent = SliderZone
+                SliderLine.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                SliderLine.BorderColor3 = Color3.fromRGB(0, 0, 0)
+                SliderLine.BorderSizePixel = 0
+                SliderLine.Position = UDim2.new(0.302564114, 0, 0.4775289, 0)
+                SliderLine.Size = UDim2.new(0, 86, 0, 4)
+                SliderLine.Font = Enum.Font.SourceSansBold
+                SliderLine.Text = ""
+                SliderLine.TextColor3 = Color3.fromRGB(255, 255, 255)
+                SliderLine.TextSize = 12.000
+                SliderLine.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+
+                local UICorner_13 = Instance.new("UICorner")
+                UICorner_13.CornerRadius = UDim.new(0, 5)
+                UICorner_13.Parent = SliderLine
+
+                local SliderValue = Instance.new("TextLabel")
+                SliderValue.Name = "SliderValue"
+                SliderValue.Parent = SliderZone
+                SliderValue.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                SliderValue.BackgroundTransparency = 1.000
+                SliderValue.BorderColor3 = Color3.fromRGB(0, 0, 0)
+                SliderValue.BorderSizePixel = 0
+                SliderValue.Position = UDim2.new(0.784985363, 0, 0.233005777, 0)
+                SliderValue.Size = UDim2.new(0, 18, 0, 16)
+                SliderValue.Font = Enum.Font.SourceSans
+                SliderValue.Text = tostring(currentValue)
+                SliderValue.TextColor3 = Color3.fromRGB(255, 255, 255)
+                SliderValue.TextSize = 13.000
+                SliderValue.TextXAlignment = Enum.TextXAlignment.Right
+
+                local SliderMover = Instance.new("TextButton")
+                SliderMover.Name = "SliderMover"
+                SliderMover.Parent = SliderZone
+                SliderMover.BackgroundColor3 = Color3.fromRGB(1, 128, 203)
+                SliderMover.BorderColor3 = Color3.fromRGB(0, 0, 0)
+                SliderMover.BorderSizePixel = 0
+                SliderMover.Position = UDim2.new(0.302564114 + ((currentValue - min)/(max - min)) * 0.44, 0, 0.354667157, 0)
+                SliderMover.Size = UDim2.new(0, 10, 0, 10)
+                SliderMover.Font = Enum.Font.SourceSansBold
+                SliderMover.Text = ""
+                SliderMover.TextColor3 = Color3.fromRGB(255, 255, 255)
+                SliderMover.TextSize = 12.000
+                SliderMover.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+
+                local UICorner_14 = Instance.new("UICorner")
+                UICorner_14.CornerRadius = UDim.new(1, 0)
+                UICorner_14.Parent = SliderMover
+
+                local dragging = false
+                SliderMover.MouseButton1Down:Connect(function()
+                    dragging = true
+                end)
+
+                RunService.RenderStepped:Connect(function()
+                    if dragging then
+                        local mousePos = UserInputService:GetMouseLocation()
+                        local relativePos = (mousePos.X - SliderLine.AbsolutePosition.X) / SliderLine.AbsoluteSize.X
+                        relativePos = math.clamp(relativePos, 0, 1)
+                        local value = min + (max - min) * relativePos
+                        value = math.floor(value)
+                        SliderMover.Position = UDim2.new(0.302564114 + relativePos * 0.44, 0, 0.354667157, 0)
+                        SliderValue.Text = tostring(value)
+                        settings[saveKey] = value
+                        saveSettings(config.FileName or "eschaton_settings.json", settings)
+                        if callback then callback(value) end
+                    end
+                end)
+
+                UserInputService.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        dragging = false
+                    end
+                end)
+
+                elementY = elementY + 0.25
+                updateSectionSize()
+            end
 
             return section
         end
@@ -483,7 +758,22 @@ function CreateButton(config)
     return config.section:CreateButton(config.name or "Button", config.callback)
 end
 
+function CreateBind(config)
+    return config.section:CreateBind(config.name or "Bind", config.default or Enum.KeyCode.F, config.callback, config.save and (config.id or config.name) or nil)
+end
+
+function CreateInput(config)
+    return config.section:CreateInput(config.name or "Input", config.placeholder or "Input...", config.default or "", config.callback, config.save and (config.id or config.name) or nil)
+end
+
+function CreateSlider(config)
+    return config.section:CreateSlider(config.name or "Slider", config.min or 0, config.max or 100, config.default or 50, config.callback, config.save and (config.id or config.name) or nil)
+end
+
 _G.CreateToggle = CreateToggle
 _G.CreateButton = CreateButton
+_G.CreateBind = CreateBind
+_G.CreateInput = CreateInput
+_G.CreateSlider = CreateSlider
 
 return UILibrary
