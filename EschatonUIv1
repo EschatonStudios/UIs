@@ -159,6 +159,10 @@ function UILibrary.new(config)
         if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
             local delta = input.Position - dragStart
             MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            -- Обновляем позиции всех элементов относительно MainFrame
+            ElementContainer.Position = UDim2.new(startPos.X.Scale + 0.039473, startPos.X.Offset + delta.X + 17, startPos.Y.Scale + 0.063131, startPos.Y.Offset + delta.Y + 21)
+            TabZone.Position = UDim2.new(startPos.X.Scale - 0.000789, startPos.X.Offset + delta.X - 0.34, startPos.Y.Scale + 0.063131, startPos.Y.Offset + delta.Y + 21)
+            Logo.Position = UDim2.new(startPos.X.Scale + 0.006298, startPos.X.Offset + delta.X + 2.72, startPos.Y.Scale + 0.010229, startPos.Y.Offset + delta.Y + 3.4)
         end
     end)
     
