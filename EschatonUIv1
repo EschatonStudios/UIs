@@ -247,7 +247,7 @@ function UILibrary.new(config)
         local tabIndex = #tabs + 1
         
         -- ZoneTab
-        local ZoneTab = Instance.new("Frame")
+        local ZoneTab = Instance.new("Frame")nce.new("Frame")
         ZoneTab.Name = "ZoneTab" .. tabIndex
         ZoneTab.Parent = TabZone
         ZoneTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
