@@ -54,10 +54,10 @@ function UILibrary.new(config)
     -- ElementContainer
     local ElementContainer = Instance.new("Frame")
     ElementContainer.Name = "ElementContainer"
-    ElementContainer.Parent = EschatonUI
+    ElementContainer.Parent = MainFrame
     ElementContainer.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
     ElementContainer.BorderColor3 = Color3.fromRGB(255, 255, 255)
-    ElementContainer.Position = UDim2.new(0.363327712, 0, 0.359848499, 0)
+    ElementContainer.Position = UDim2.new(0.089361702, 0, 0.185294118, 0)
     ElementContainer.Size = UDim2.new(0, 400, 0, 270)
     ElementContainer.ZIndex = 2
 
@@ -68,12 +68,12 @@ function UILibrary.new(config)
     -- Logo
     local Logo = Instance.new("ImageLabel")
     Logo.Name = "Logo"
-    Logo.Parent = EschatonUI
+    Logo.Parent = MainFrame
     Logo.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Logo.BackgroundTransparency = 0.900
     Logo.BorderColor3 = Color3.fromRGB(0, 0, 0)
     Logo.BorderSizePixel = 0
-    Logo.Position = UDim2.new(0.330152452, 0, 0.306946725, 0)
+    Logo.Position = UDim2.new(0.019148936, 0, 0.029411765, 0)
     Logo.Size = UDim2.new(0, 32, 0, 32)
     Logo.ZIndex = 3
     Logo.Image = "rbxassetid://107336731168834"
@@ -128,11 +128,11 @@ function UILibrary.new(config)
     -- TabZone
     local TabZone = Instance.new("Frame")
     TabZone.Name = "TabZone"
-    TabZone.Parent = EschatonUI
+    TabZone.Parent = MainFrame
     TabZone.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     TabZone.BackgroundTransparency = 1.000
     TabZone.BorderColor3 = Color3.fromRGB(255, 255, 255)
-    TabZone.Position = UDim2.new(0.323064923, 0, 0.359848499, 0)
+    TabZone.Position = UDim2.new(-0.106382979, 0, 0.185294118, 0)
     TabZone.Size = UDim2.new(0, 50, 0, 200)
     TabZone.ZIndex = 2
 
@@ -153,10 +153,6 @@ function UILibrary.new(config)
         if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
             local delta = input.Position - dragStart
             MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-            -- Обновляем позиции всех элементов относительно MainFrame
-            ElementContainer.Position = UDim2.new(startPos.X.Scale + 0.089361702, startPos.X.Offset + delta.X + 42, startPos.Y.Scale + 0.185294118, startPos.Y.Offset + delta.Y + 63)
-            TabZone.Position = UDim2.new(startPos.X.Scale - 0.000789, startPos.X.Offset + delta.X - 0.34, startPos.Y.Scale + 0.185294118, startPos.Y.Offset + delta.Y + 63)
-            Logo.Position = UDim2.new(startPos.X.Scale + 0.006298, startPos.X.Offset + delta.X + 2.72, startPos.Y.Scale + 0.010229, startPos.Y.Offset + delta.Y + 3.4)
         end
     end)
     
