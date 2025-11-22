@@ -58,7 +58,7 @@ function UILibrary.new(config)
     ElementContainer.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
     ElementContainer.BorderColor3 = Color3.fromRGB(255, 255, 255)
     ElementContainer.Position = UDim2.new(0.363327712, 0, 0.359848499, 0)
-    ElementContainer.Size = UDim2.new(0, 420, 0, 290)
+    ElementContainer.Size = UDim2.new(0, 400, 0, 270)
     ElementContainer.ZIndex = 2
 
     local UICorner = Instance.new("UICorner")
@@ -154,8 +154,8 @@ function UILibrary.new(config)
             local delta = input.Position - dragStart
             MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
             -- Обновляем позиции всех элементов относительно MainFrame
-            ElementContainer.Position = UDim2.new(startPos.X.Scale + 0.039473, startPos.X.Offset + delta.X + 17, startPos.Y.Scale + 0.063131, startPos.Y.Offset + delta.Y + 21)
-            TabZone.Position = UDim2.new(startPos.X.Scale - 0.000789, startPos.X.Offset + delta.X - 0.34, startPos.Y.Scale + 0.063131, startPos.Y.Offset + delta.Y + 21)
+            ElementContainer.Position = UDim2.new(startPos.X.Scale + 0.089361702, startPos.X.Offset + delta.X + 42, startPos.Y.Scale + 0.185294118, startPos.Y.Offset + delta.Y + 63)
+            TabZone.Position = UDim2.new(startPos.X.Scale - 0.000789, startPos.X.Offset + delta.X - 0.34, startPos.Y.Scale + 0.185294118, startPos.Y.Offset + delta.Y + 63)
             Logo.Position = UDim2.new(startPos.X.Scale + 0.006298, startPos.X.Offset + delta.X + 2.72, startPos.Y.Scale + 0.010229, startPos.Y.Offset + delta.Y + 3.4)
         end
     end)
@@ -293,11 +293,13 @@ function UILibrary.new(config)
             for i, t in pairs(tabs) do
                 t.button.BackgroundTransparency = 1.000
                 t.image.ImageColor3 = Color3.fromRGB(255, 255, 255)
+                t.line.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                 t.line.Visible = false
                 t.container.Visible = false
             end
             TabButton.BackgroundTransparency = 0.950
             ImageButton.ImageColor3 = Color3.fromRGB(1, 128, 203)
+            Line.BackgroundColor3 = Color3.fromRGB(1, 128, 203)
             Line.Visible = true
             tabContainer.Visible = true
             currentTab = name
@@ -308,6 +310,8 @@ function UILibrary.new(config)
             if currentTab ~= name then
                 TabButton.BackgroundTransparency = 0.980
                 ImageButton.ImageColor3 = Color3.fromRGB(255, 255, 255)
+                Line.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                Line.Visible = true
             end
         end)
         
@@ -315,6 +319,7 @@ function UILibrary.new(config)
             if currentTab ~= name then
                 TabButton.BackgroundTransparency = 1.000
                 ImageButton.ImageColor3 = Color3.fromRGB(255, 255, 255)
+                Line.Visible = false
             end
         end)
 
