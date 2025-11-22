@@ -57,7 +57,7 @@ function UILibrary.new(config)
     ElementContainer.Parent = MainFrame
     ElementContainer.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
     ElementContainer.BorderColor3 = Color3.fromRGB(255, 255, 255)
-    ElementContainer.Position = UDim2.new(0.036170213, 0, 0.061764706, 0)
+    ElementContainer.Position = UDim2.new(0.089361702, 0, 0.185294118, 0)
     ElementContainer.Size = UDim2.new(0, 420, 0, 290)
     ElementContainer.ZIndex = 2
 
@@ -132,7 +132,7 @@ function UILibrary.new(config)
     TabZone.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     TabZone.BackgroundTransparency = 1.000
     TabZone.BorderColor3 = Color3.fromRGB(255, 255, 255)
-    TabZone.Position = UDim2.new(-0.106382979, 0, 0.061764706, 0)
+    TabZone.Position = UDim2.new(-0.106382979, 0, 0.185294118, 0)
     TabZone.Size = UDim2.new(0, 50, 0, 200)
     TabZone.ZIndex = 2
 
