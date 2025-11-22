@@ -7,11 +7,6 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
-local CoreGui = game:GetService("CoreGui")
-
--- Глобальные переменные
-_G.UIElements = _G.UIElements or {}
-_G.UICallbacks = _G.UICallbacks or {}
 
 -- Функции сохранения/загрузки
 local function saveSettings(fileName, settings)
@@ -43,7 +38,6 @@ function UILibrary.new(config)
     EschatonUI.Name = "EschatonUI"
     EschatonUI.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
     EschatonUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    EschatonUI.ResetOnSpawn = false
 
     -- MainFrame
     local MainFrame = Instance.new("Frame")
@@ -60,10 +54,10 @@ function UILibrary.new(config)
     -- ElementContainer
     local ElementContainer = Instance.new("Frame")
     ElementContainer.Name = "ElementContainer"
-    ElementContainer.Parent = MainFrame
+    ElementContainer.Parent = EschatonUI
     ElementContainer.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
     ElementContainer.BorderColor3 = Color3.fromRGB(255, 255, 255)
-    ElementContainer.Position = UDim2.new(0.106382979, 0, 0.161764706, 0)
+    ElementContainer.Position = UDim2.new(0.363327712, 0, 0.359848499, 0)
     ElementContainer.Size = UDim2.new(0, 420, 0, 290)
     ElementContainer.ZIndex = 2
 
@@ -74,12 +68,12 @@ function UILibrary.new(config)
     -- Logo
     local Logo = Instance.new("ImageLabel")
     Logo.Name = "Logo"
-    Logo.Parent = MainFrame
+    Logo.Parent = EschatonUI
     Logo.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Logo.BackgroundTransparency = 0.900
     Logo.BorderColor3 = Color3.fromRGB(0, 0, 0)
     Logo.BorderSizePixel = 0
-    Logo.Position = UDim2.new(0.0127659574, 0, 0.0235294118, 0)
+    Logo.Position = UDim2.new(0.330152452, 0, 0.306946725, 0)
     Logo.Size = UDim2.new(0, 32, 0, 32)
     Logo.ZIndex = 3
     Logo.Image = "rbxassetid://107336731168834"
@@ -134,11 +128,11 @@ function UILibrary.new(config)
     -- TabZone
     local TabZone = Instance.new("Frame")
     TabZone.Name = "TabZone"
-    TabZone.Parent = MainFrame
+    TabZone.Parent = EschatonUI
     TabZone.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     TabZone.BackgroundTransparency = 1.000
     TabZone.BorderColor3 = Color3.fromRGB(255, 255, 255)
-    TabZone.Position = UDim2.new(-0.00212765957, 0, 0.161764706, 0)
+    TabZone.Position = UDim2.new(0.323064923, 0, 0.359848499, 0)
     TabZone.Size = UDim2.new(0, 50, 0, 200)
     TabZone.ZIndex = 2
 
@@ -159,6 +153,10 @@ function UILibrary.new(config)
         if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
             local delta = input.Position - dragStart
             MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            -- Обновляем позиции всех элементов относительно MainFrame
+            ElementContainer.Position = UDim2.new(startPos.X.Scale + 0.039473, startPos.X.Offset + delta.X + 17, startPos.Y.Scale + 0.063131, startPos.Y.Offset + delta.Y + 21)
+            TabZone.Position = UDim2.new(startPos.X.Scale - 0.000789, startPos.X.Offset + delta.X - 0.34, startPos.Y.Scale + 0.063131, startPos.Y.Offset + delta.Y + 21)
+            Logo.Position = UDim2.new(startPos.X.Scale + 0.006298, startPos.X.Offset + delta.X + 2.72, startPos.Y.Scale + 0.010229, startPos.Y.Offset + delta.Y + 3.4)
         end
     end)
     
@@ -305,7 +303,7 @@ function UILibrary.new(config)
             currentTab = name
         end)
         
-        -- Обработка наведения мыши
+        -- Обработка наведения мыши (MouseTargeted эффект)
         TabButton.MouseEnter:Connect(function()
             if currentTab ~= name then
                 TabButton.BackgroundTransparency = 0.980
@@ -456,7 +454,6 @@ function UILibrary.new(config)
                 -- Option клик (откроет окошко настроек)
                 Option.MouseButton1Click:Connect(function()
                     print("Options for", name, "- Save:", saveId ~= nil)
-                    -- Здесь будет окошко настроек
                 end)
 
                 if currentValue and callback then
