@@ -1,5 +1,4 @@
--- Eschaton UI Library
--- Version: 3.2
+
 
 local UILibrary = {}
 
@@ -8,7 +7,7 @@ local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 
--- Функции сохранения/загрузки
+
 local function saveSettings(fileName, settings)
     if writefile then
         writefile(fileName, HttpService:JSONEncode(settings))
@@ -25,7 +24,6 @@ local function loadSettings(fileName)
     return {}
 end
 
--- Функция создания UI
 function UILibrary.new(config)
     local ui = {}
     _G.EschatonUI = ui
@@ -34,13 +32,13 @@ function UILibrary.new(config)
     local currentTab = nil
     local uiVisible = true
 
-    -- Создание основного ScreenGui
+
     local EschatonUI = Instance.new("ScreenGui")
     EschatonUI.Name = "EschatonUI"
     EschatonUI.Parent = game:GetService("CoreGui")
     EschatonUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    -- MainFrame
+
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
     MainFrame.Parent = EschatonUI
@@ -52,7 +50,7 @@ function UILibrary.new(config)
     local UICorner_17 = Instance.new("UICorner")
     UICorner_17.Parent = MainFrame
 
-    -- ElementContainer
+
     local ElementContainer = Instance.new("Frame")
     ElementContainer.Name = "ElementContainer"
     ElementContainer.Parent = MainFrame
@@ -73,7 +71,7 @@ function UILibrary.new(config)
     UIStroke.Transparency = 0.5
     UIStroke.Parent = ElementContainer
 
-    -- Logo
+
     local Logo = Instance.new("ImageLabel")
     Logo.Name = "Logo"
     Logo.Parent = MainFrame
@@ -133,7 +131,7 @@ function UILibrary.new(config)
     Version.TextSize = 13.000
     Version.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- TabZone
+
     local TabZone = Instance.new("Frame")
     TabZone.Name = "TabZone"
     TabZone.Parent = MainFrame
@@ -144,7 +142,7 @@ function UILibrary.new(config)
     TabZone.Size = UDim2.new(0, 50, 0, 200)
     TabZone.ZIndex = 2
 
-    -- Функция закрытия всех окон опций
+
     local function closeAllOptionWindows()
         if _G.EschatonOptionWindows then
             for i, window in pairs(_G.EschatonOptionWindows) do
@@ -155,7 +153,7 @@ function UILibrary.new(config)
         end
     end
     
-    -- Перетаскивание
+
     local dragging = false
     local dragStart = nil
     local startPos = nil
@@ -187,7 +185,7 @@ function UILibrary.new(config)
         end
     end)
 
-    -- Скрытие/показ UI
+
     UserInputService.InputBegan:Connect(function(input, processed)
         if not processed and input.KeyCode.Name == (settings["hide_ui_bind"] or "RightShift") then
             uiVisible = not uiVisible
@@ -195,7 +193,7 @@ function UILibrary.new(config)
         end
     end)
 
-    -- Создание Settings таба по умолчанию
+
     local settingsTab = Instance.new("Frame")
     settingsTab.Name = "Settings"
     settingsTab.Parent = TabZone
@@ -234,7 +232,7 @@ function UILibrary.new(config)
     settingsImage.ZIndex = 3
     settingsImage.Image = "rbxassetid://7059346373"
     
-    -- Контейнер для Settings
+
     local settingsContainer = Instance.new("Frame")
     settingsContainer.Name = "SettingsContainer"
     settingsContainer.Parent = ElementContainer
@@ -242,7 +240,7 @@ function UILibrary.new(config)
     settingsContainer.Size = UDim2.new(1, 0, 1, 0)
     settingsContainer.Visible = false
     
-    -- Секция Settings
+
     local settingsSection = Instance.new("Frame")
     settingsSection.Name = "Settings"
     settingsSection.Parent = settingsContainer
@@ -273,7 +271,7 @@ function UILibrary.new(config)
     settingsSectionName.TextSize = 12
     settingsSectionName.TextXAlignment = Enum.TextXAlignment.Left
     
-    -- Hide UI Bind
+
     local hideUIZone = Instance.new("Frame")
     hideUIZone.Name = "HideUIZone"
     hideUIZone.Parent = settingsSection
@@ -338,7 +336,7 @@ function UILibrary.new(config)
         end
     end)
     
-    -- Создание линии для Settings
+
     local settingsLine = Instance.new("Frame")
     settingsLine.Name = "Line"
     settingsLine.Parent = settingsButton
@@ -352,8 +350,7 @@ function UILibrary.new(config)
     local settingsLineCorner = Instance.new("UICorner")
     settingsLineCorner.CornerRadius = UDim.new(1, 0)
     settingsLineCorner.Parent = settingsLine
-    
-    -- Обработка клика по Settings
+
     local function switchToSettings()
         closeAllOptionWindows()
         for i, t in pairs(tabs) do
@@ -370,8 +367,7 @@ function UILibrary.new(config)
         settingsContainer.Visible = true
         currentTab = "Settings"
     end
-    
-    -- Обработка наведения мыши для Settings
+
     settingsButton.MouseEnter:Connect(function()
         if currentTab ~= "Settings" then
             settingsButton.BackgroundTransparency = 0.980
@@ -409,12 +405,10 @@ function UILibrary.new(config)
         enableConfigMode()
     end)
 
-    -- Создание Tab
     function ui:CreateTab(name, imageId)
         local tab = {}
         local tabIndex = #tabs + 1
-        
-        -- ZoneTab
+
         local ZoneTab = Instance.new("Frame")
         ZoneTab.Name = "ZoneTab" .. tabIndex
         ZoneTab.Parent = TabZone
@@ -468,7 +462,6 @@ function UILibrary.new(config)
         UICorner_20.CornerRadius = UDim.new(1, 0)
         UICorner_20.Parent = Line
 
-        -- Контейнер для секций
         local tabContainer = Instance.new("Frame")
         tabContainer.Name = name .. "Container"
         tabContainer.Parent = ElementContainer
@@ -488,7 +481,6 @@ function UILibrary.new(config)
             currentTab = name
         end
 
-        -- Обработка клика по табу
         local function switchToTab()
             closeAllOptionWindows()
             for i, t in pairs(tabs) do
@@ -498,14 +490,13 @@ function UILibrary.new(config)
                 t.line.Visible = false
                 t.container.Visible = false
             end
-            -- Сброс Settings
+
             settingsButton.BackgroundTransparency = 1.000
             settingsImage.ImageColor3 = Color3.fromRGB(255, 255, 255)
             settingsLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             settingsLine.Visible = false
             settingsContainer.Visible = false
-            
-            -- Выключаем конфиг режим
+
             configMode = false
             if ConfigBlur then
                 ConfigBlur.Visible = false
@@ -531,8 +522,7 @@ function UILibrary.new(config)
         
         TabButton.MouseButton1Click:Connect(switchToTab)
         ImageButton.MouseButton1Click:Connect(switchToTab)
-        
-        -- Обработка наведения мыши (MouseTargeted эффект)
+
         TabButton.MouseEnter:Connect(function()
             if currentTab ~= name then
                 TabButton.BackgroundTransparency = 0.980
@@ -550,7 +540,6 @@ function UILibrary.new(config)
             end
         end)
 
-        -- Создание Section
         function tab:CreateSection(name)
             local section = {}
             local sectionCount = 0
@@ -596,14 +585,12 @@ function UILibrary.new(config)
 
             local elementCount = 0
 
-            -- Функция обновления размера секции
             local function updateSectionSize()
                 local lastZoneBottom = 20 + elementCount * 30
                 local newHeight = lastZoneBottom + 15
                 sectionFrame.Size = UDim2.new(0, 195, 0, newHeight)
             end
 
-            -- CreateToggle
             function section:CreateToggle(name, default, callback, saveId)
                 local saveKey = saveId or name
                 local optionSaveEnabled
@@ -631,7 +618,6 @@ function UILibrary.new(config)
                 ToggleZone.Position = UDim2.new(0, 0, 0, 20 + elementCount * 30)
                 ToggleZone.Size = UDim2.new(0, 195, 0, 30)
 
-                -- Option кнопка (справа)
                 local Option = Instance.new("ImageButton")
                 Option.Name = "Option"
                 Option.Parent = ToggleZone
@@ -765,7 +751,7 @@ function UILibrary.new(config)
                         if optionSaveEnabled then
                             saveToggle.BackgroundColor3 = Color3.fromRGB(1, 128, 203)
                             saveToggle.Text = "✔"
-                            -- Сохраняем текущее состояние toggle при включении сохранения
+
                             settings[saveKey] = currentValue
                             saveSettings(config.FileName or "eschaton_settings.json", settings)
                         else
@@ -783,7 +769,7 @@ function UILibrary.new(config)
                 updateSectionSize()
             end
 
-            -- CreateButton
+
             function section:CreateButton(name, callback)
                 local ButtonZone = Instance.new("Frame")
                 ButtonZone.Name = "ButtonZone"
@@ -848,7 +834,7 @@ function UILibrary.new(config)
                 updateSectionSize()
             end
 
-            -- CreateSlider
+
             function section:CreateSlider(name, min, max, default, callback, saveId)
                 local saveKey = saveId or name
                 local optionSaveEnabled
@@ -988,7 +974,7 @@ function UILibrary.new(config)
                 SliderMover.InputBegan:Connect(startDragging)
                 UserInputService.InputEnded:Connect(stopDragging)
                 
-                -- Option клик
+
                 local optionWindow = nil
                 if not _G.EschatonOptionWindows then
                     _G.EschatonOptionWindows = {}
@@ -1063,7 +1049,6 @@ function UILibrary.new(config)
                 updateSectionSize()
             end
             
-            -- CreateDropdown
             function section:CreateDropdown(name, options, default, callback, saveId)
                 local saveKey = saveId or name
                 local optionSaveEnabled
@@ -1182,8 +1167,7 @@ function UILibrary.new(config)
                 
                 DropdownButton.MouseButton1Click:Connect(toggleDropdown)
                 DropdownArrow.MouseButton1Click:Connect(toggleDropdown)
-                
-                -- Option клик
+
                 local optionWindow = nil
                 if not _G.EschatonOptionWindows then
                     _G.EschatonOptionWindows = {}
@@ -1258,7 +1242,7 @@ function UILibrary.new(config)
                 updateSectionSize()
             end
             
-            -- CreateBind
+
             function section:CreateBind(name, default, callback, saveId)
                 local saveKey = saveId or name
                 local optionSaveEnabled
@@ -1354,14 +1338,14 @@ function UILibrary.new(config)
                     end
                 end)
                 
-                -- Активация бинда
+
                 UserInputService.InputBegan:Connect(function(input, processed)
                     if not processed and input.KeyCode.Name == currentBind and callback then
                         callback()
                     end
                 end)
                 
-                -- Option клик
+
                 local optionWindow = nil
                 if not _G.EschatonOptionWindows then
                     _G.EschatonOptionWindows = {}
@@ -1432,7 +1416,7 @@ function UILibrary.new(config)
                 updateSectionSize()
             end
             
-            -- CreateInput
+
             function section:CreateInput(name, placeholder, callback, saveId)
                 local saveKey = saveId or name
                 local optionSaveEnabled
@@ -1515,7 +1499,6 @@ function UILibrary.new(config)
                     if callback then callback(currentValue) end
                 end)
                 
-                -- Option клик
                 local optionWindow = nil
                 if not _G.EschatonOptionWindows then
                     _G.EschatonOptionWindows = {}
@@ -1592,7 +1575,6 @@ function UILibrary.new(config)
         return tab
     end
 
-    -- Система уведомлений
     local NotifiUI = Instance.new("ScreenGui")
     NotifiUI.Name = "EschatonNotifi"
     NotifiUI.Parent = game:GetService("CoreGui")
@@ -1621,7 +1603,7 @@ function UILibrary.new(config)
     NotifiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     NotifiStroke.Parent = NotifiList
     
-    -- Замутнение фона
+
     ConfigBlur = Instance.new("Frame")
     ConfigBlur.Name = "ConfigBlur"
     ConfigBlur.Parent = EschatonUI
@@ -1635,7 +1617,7 @@ function UILibrary.new(config)
     
     configMode = false
     
-    -- Перетаскивание NotifiList
+
     NotifiList.Active = true
     local draggingNotifi = false
     local notifiDragStart = nil
@@ -1672,7 +1654,7 @@ function UILibrary.new(config)
                 notifiDragConnection:Disconnect()
                 notifiDragConnection = nil
             end
-            -- Сохраняем позицию
+
             settings["notifi_position"] = {
                 X = {Scale = NotifiList.Position.X.Scale, Offset = NotifiList.Position.X.Offset},
                 Y = {Scale = NotifiList.Position.Y.Scale, Offset = NotifiList.Position.Y.Offset}
@@ -1692,7 +1674,7 @@ function UILibrary.new(config)
     local notificationCount = 0
     
     function ui:Notification(text)
-        -- Показываем NotifiList для уведомлений
+
         if not configMode then
             NotifiList.Visible = true
         end
@@ -1749,18 +1731,18 @@ function UILibrary.new(config)
         notifiText.TextSize = 13
         notifiText.TextXAlignment = Enum.TextXAlignment.Left
         
-        -- Анимация появления
+
         notification:TweenSize(UDim2.new(0, 250, 0, 25), "Out", "Quad", 0.3, true)
         
         notificationCount = notificationCount + 1
         
-        -- Автоудаление через 3 секунды
+
         spawn(function()
             wait(3)
             notification:TweenSize(UDim2.new(0, 0, 0, 25), "In", "Quad", 0.3, true)
             wait(0.3)
             notification:Destroy()
-            -- Скрываем NotifiList если нет уведомлений
+
             if not configMode and #NotifiList:GetChildren() <= 1 then
                 NotifiList.Visible = false
             end
@@ -1770,7 +1752,7 @@ function UILibrary.new(config)
     return ui
 end
 
--- Новая система создания элементов
+
 function create(elementType, config)
     local saveName = config.SaveName
     
@@ -1822,7 +1804,7 @@ end
 
 _G.create = create
 
--- Глобальная функция уведомлений
+
 function notification(text)
     if _G.EschatonUI then
         _G.EschatonUI:Notification(text)
