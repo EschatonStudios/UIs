@@ -28,6 +28,7 @@ end
 -- Функция создания UI
 function UILibrary.new(config)
     local ui = {}
+    _G.EschatonUI = ui
     local settings = loadSettings(config.FileName or "eschaton_settings.json")
     local tabs = {}
     local currentTab = nil
@@ -36,7 +37,7 @@ function UILibrary.new(config)
     -- Создание основного ScreenGui
     local EschatonUI = Instance.new("ScreenGui")
     EschatonUI.Name = "EschatonUI"
-    EschatonUI.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    EschatonUI.Parent = game:GetService("CoreGui")
     EschatonUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
     -- MainFrame
@@ -57,13 +58,20 @@ function UILibrary.new(config)
     ElementContainer.Parent = MainFrame
     ElementContainer.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
     ElementContainer.BorderColor3 = Color3.fromRGB(255, 255, 255)
-    ElementContainer.Position = UDim2.new(0.089361702, 0, 0.185294118, 0)
-    ElementContainer.Size = UDim2.new(0, 400, 0, 270)
+    ElementContainer.BorderSizePixel = 0
+    ElementContainer.Position = UDim2.new(0.106382979, -1, 0.147058824, -1)
+    ElementContainer.Size = UDim2.new(0, 420, 0, 290)
     ElementContainer.ZIndex = 2
 
     local UICorner = Instance.new("UICorner")
     UICorner.CornerRadius = UDim.new(0, 3)
     UICorner.Parent = ElementContainer
+    
+    local UIStroke = Instance.new("UIStroke")
+    UIStroke.Color = Color3.fromRGB(0, 0, 0)
+    UIStroke.Thickness = 1
+    UIStroke.Transparency = 0.5
+    UIStroke.Parent = ElementContainer
 
     -- Logo
     local Logo = Instance.new("ImageLabel")
@@ -132,39 +140,56 @@ function UILibrary.new(config)
     TabZone.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     TabZone.BackgroundTransparency = 1.000
     TabZone.BorderColor3 = Color3.fromRGB(255, 255, 255)
-    TabZone.Position = UDim2.new(-0.106382979, 0, 0.185294118, 0)
+    TabZone.Position = UDim2.new(0, 0, 0.147058824, 0)
     TabZone.Size = UDim2.new(0, 50, 0, 200)
     TabZone.ZIndex = 2
 
+    -- Функция закрытия всех окон опций
+    local function closeAllOptionWindows()
+        if _G.EschatonOptionWindows then
+            for i, window in pairs(_G.EschatonOptionWindows) do
+                if window and window.Parent then
+                    window.Visible = false
+                end
+            end
+        end
+    end
+    
     -- Перетаскивание
     local dragging = false
     local dragStart = nil
     local startPos = nil
+    local dragConnection = nil
     
     MainFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            closeAllOptionWindows()
             dragging = true
             dragStart = input.Position
             startPos = MainFrame.Position
+            
+            dragConnection = UserInputService.InputChanged:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+                    local delta = input.Position - dragStart
+                    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                end
+            end)
         end
     end)
     
-    MainFrame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
-            local delta = input.Position - dragStart
-            MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-    
-    MainFrame.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging then
             dragging = false
+            if dragConnection then
+                dragConnection:Disconnect()
+                dragConnection = nil
+            end
         end
     end)
 
     -- Скрытие/показ UI
     UserInputService.InputBegan:Connect(function(input, processed)
-        if not processed and input.KeyCode == Enum.KeyCode.RightShift then
+        if not processed and input.KeyCode.Name == (settings["hide_ui_bind"] or "RightShift") then
             uiVisible = not uiVisible
             EschatonUI.Enabled = uiVisible
         end
@@ -208,6 +233,181 @@ function UILibrary.new(config)
     settingsImage.Size = UDim2.new(0, 18, 0, 18)
     settingsImage.ZIndex = 3
     settingsImage.Image = "rbxassetid://7059346373"
+    
+    -- Контейнер для Settings
+    local settingsContainer = Instance.new("Frame")
+    settingsContainer.Name = "SettingsContainer"
+    settingsContainer.Parent = ElementContainer
+    settingsContainer.BackgroundTransparency = 1
+    settingsContainer.Size = UDim2.new(1, 0, 1, 0)
+    settingsContainer.Visible = false
+    
+    -- Секция Settings
+    local settingsSection = Instance.new("Frame")
+    settingsSection.Name = "Settings"
+    settingsSection.Parent = settingsContainer
+    settingsSection.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    settingsSection.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    settingsSection.BorderSizePixel = 0
+    settingsSection.Position = UDim2.new(0.0238095243, 0, 0.0344827585, 0)
+    settingsSection.Size = UDim2.new(0, 195, 0, 65)
+    
+    local settingsSectionCorner = Instance.new("UICorner")
+    settingsSectionCorner.Parent = settingsSection
+    
+    local settingsSectionStroke = Instance.new("UIStroke")
+    settingsSectionStroke.Color = Color3.fromRGB(84, 84, 84)
+    settingsSectionStroke.Thickness = 1
+    settingsSectionStroke.Transparency = 0.5
+    settingsSectionStroke.Parent = settingsSection
+    
+    local settingsSectionName = Instance.new("TextLabel")
+    settingsSectionName.Name = "SectionName"
+    settingsSectionName.Parent = settingsSection
+    settingsSectionName.BackgroundTransparency = 1
+    settingsSectionName.Position = UDim2.new(0.0350961536, 0, 0.02, 0)
+    settingsSectionName.Size = UDim2.new(0, 18, 0, 16)
+    settingsSectionName.Font = Enum.Font.SourceSansBold
+    settingsSectionName.Text = "Settings"
+    settingsSectionName.TextColor3 = Color3.fromRGB(255, 255, 255)
+    settingsSectionName.TextSize = 12
+    settingsSectionName.TextXAlignment = Enum.TextXAlignment.Left
+    
+    -- Hide UI Bind
+    local hideUIZone = Instance.new("Frame")
+    hideUIZone.Name = "HideUIZone"
+    hideUIZone.Parent = settingsSection
+    hideUIZone.Active = true
+    hideUIZone.BackgroundTransparency = 1
+    hideUIZone.Position = UDim2.new(0, 0, 0, 25)
+    hideUIZone.Size = UDim2.new(0, 195, 0, 30)
+    
+    local hideUIName = Instance.new("TextLabel")
+    hideUIName.Parent = hideUIZone
+    hideUIName.BackgroundTransparency = 1
+    hideUIName.Position = UDim2.new(0.0516529568, 0, 0.233005777, 0)
+    hideUIName.Size = UDim2.new(0, 18, 0, 16)
+    hideUIName.Font = Enum.Font.SourceSansBold
+    hideUIName.Text = "Hide UI"
+    hideUIName.TextColor3 = Color3.fromRGB(255, 255, 255)
+    hideUIName.TextSize = 13
+    hideUIName.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local hideUIBind = Instance.new("TextButton")
+    hideUIBind.Parent = hideUIZone
+    hideUIBind.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+    hideUIBind.BorderSizePixel = 0
+    hideUIBind.Position = UDim2.new(0.533333361, 0, 0.233005777, 0)
+    hideUIBind.Size = UDim2.new(0, 70, 0, 16)
+    hideUIBind.Font = Enum.Font.SourceSansBold
+    hideUIBind.Text = settings["hide_ui_bind"] or "RightShift"
+    hideUIBind.TextColor3 = Color3.fromRGB(255, 255, 255)
+    hideUIBind.TextSize = 12
+    
+    local hideUICorner = Instance.new("UICorner")
+    hideUICorner.CornerRadius = UDim.new(0, 5)
+    hideUICorner.Parent = hideUIBind
+    
+    local hideUIStroke = Instance.new("UIStroke")
+    hideUIStroke.Color = Color3.fromRGB(0, 0, 0)
+    hideUIStroke.Thickness = 1
+    hideUIStroke.Transparency = 0.3
+    hideUIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    hideUIStroke.Parent = hideUIBind
+    
+    local isBindingHideUI = false
+    
+    hideUIBind.MouseButton1Click:Connect(function()
+        if not isBindingHideUI then
+            isBindingHideUI = true
+            hideUIBind.Text = "..."
+            
+            local connection
+            connection = UserInputService.InputBegan:Connect(function(input, processed)
+                if not processed then
+                    local keyName = input.KeyCode.Name
+                    if keyName ~= "Unknown" then
+                        hideUIBind.Text = keyName
+                        settings["hide_ui_bind"] = keyName
+                        saveSettings(config.FileName or "eschaton_settings.json", settings)
+                        isBindingHideUI = false
+                        connection:Disconnect()
+                    end
+                end
+            end)
+        end
+    end)
+    
+    -- Создание линии для Settings
+    local settingsLine = Instance.new("Frame")
+    settingsLine.Name = "Line"
+    settingsLine.Parent = settingsButton
+    settingsLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    settingsLine.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    settingsLine.BorderSizePixel = 0
+    settingsLine.Position = UDim2.new(1.74386162e-06, 0, 0.114285715, 0)
+    settingsLine.Size = UDim2.new(0, 2, 0, 27)
+    settingsLine.Visible = false
+    
+    local settingsLineCorner = Instance.new("UICorner")
+    settingsLineCorner.CornerRadius = UDim.new(1, 0)
+    settingsLineCorner.Parent = settingsLine
+    
+    -- Обработка клика по Settings
+    local function switchToSettings()
+        closeAllOptionWindows()
+        for i, t in pairs(tabs) do
+            t.button.BackgroundTransparency = 1.000
+            t.image.ImageColor3 = Color3.fromRGB(255, 255, 255)
+            t.line.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            t.line.Visible = false
+            t.container.Visible = false
+        end
+        settingsButton.BackgroundTransparency = 0.950
+        settingsImage.ImageColor3 = Color3.fromRGB(1, 128, 203)
+        settingsLine.BackgroundColor3 = Color3.fromRGB(1, 128, 203)
+        settingsLine.Visible = true
+        settingsContainer.Visible = true
+        currentTab = "Settings"
+    end
+    
+    -- Обработка наведения мыши для Settings
+    settingsButton.MouseEnter:Connect(function()
+        if currentTab ~= "Settings" then
+            settingsButton.BackgroundTransparency = 0.980
+            settingsImage.ImageColor3 = Color3.fromRGB(255, 255, 255)
+            settingsLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            settingsLine.Visible = true
+        end
+    end)
+    
+    settingsButton.MouseLeave:Connect(function()
+        if currentTab ~= "Settings" then
+            settingsButton.BackgroundTransparency = 1.000
+            settingsImage.ImageColor3 = Color3.fromRGB(255, 255, 255)
+            settingsLine.Visible = false
+        end
+    end)
+    
+    local function enableConfigMode()
+        configMode = true
+        ConfigBlur.Visible = true
+        ConfigBlur.BackgroundTransparency = 0.5
+        NotifiList.Visible = true
+        NotifiList.BackgroundTransparency = 0.9
+        if NotifiStroke then
+            NotifiStroke.Transparency = 0
+        end
+    end
+    
+    settingsButton.MouseButton1Click:Connect(function()
+        switchToSettings()
+        enableConfigMode()
+    end)
+    settingsImage.MouseButton1Click:Connect(function()
+        switchToSettings()
+        enableConfigMode()
+    end)
 
     -- Создание Tab
     function ui:CreateTab(name, imageId)
@@ -222,7 +422,7 @@ function UILibrary.new(config)
         ZoneTab.BackgroundTransparency = 1.000
         ZoneTab.BorderColor3 = Color3.fromRGB(0, 0, 0)
         ZoneTab.BorderSizePixel = 0
-        ZoneTab.Position = UDim2.new(0.0199999996, 0, (tabIndex - 1) * 0.25, 0)
+        ZoneTab.Position = UDim2.new(0.0199999996, 0, (tabIndex - 1) * 0.3, 0)
         ZoneTab.Size = UDim2.new(0, 50, 0, 50)
 
         local TabButton = Instance.new("TextButton")
@@ -283,9 +483,14 @@ function UILibrary.new(config)
             container = tabContainer,
             name = name
         }
+        
+        if tabIndex == 1 then
+            currentTab = name
+        end
 
         -- Обработка клика по табу
-        TabButton.MouseButton1Click:Connect(function()
+        local function switchToTab()
+            closeAllOptionWindows()
             for i, t in pairs(tabs) do
                 t.button.BackgroundTransparency = 1.000
                 t.image.ImageColor3 = Color3.fromRGB(255, 255, 255)
@@ -293,13 +498,39 @@ function UILibrary.new(config)
                 t.line.Visible = false
                 t.container.Visible = false
             end
+            -- Сброс Settings
+            settingsButton.BackgroundTransparency = 1.000
+            settingsImage.ImageColor3 = Color3.fromRGB(255, 255, 255)
+            settingsLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            settingsLine.Visible = false
+            settingsContainer.Visible = false
+            
+            -- Выключаем конфиг режим
+            configMode = false
+            if ConfigBlur then
+                ConfigBlur.Visible = false
+                ConfigBlur.BackgroundTransparency = 1
+            end
+            if NotifiList and #NotifiList:GetChildren() <= 1 then
+                NotifiList.Visible = false
+            end
+            if NotifiList then
+                NotifiList.BackgroundTransparency = 1
+            end
+            if NotifiStroke then
+                NotifiStroke.Transparency = 1
+            end
+            
             TabButton.BackgroundTransparency = 0.950
             ImageButton.ImageColor3 = Color3.fromRGB(1, 128, 203)
             Line.BackgroundColor3 = Color3.fromRGB(1, 128, 203)
             Line.Visible = true
             tabContainer.Visible = true
             currentTab = name
-        end)
+        end
+        
+        TabButton.MouseButton1Click:Connect(switchToTab)
+        ImageButton.MouseButton1Click:Connect(switchToTab)
         
         -- Обработка наведения мыши (MouseTargeted эффект)
         TabButton.MouseEnter:Connect(function()
@@ -337,10 +568,16 @@ function UILibrary.new(config)
             sectionFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
             sectionFrame.BorderSizePixel = 0
             sectionFrame.Position = isLeft and UDim2.new(0.0238095243, 0, 0.0344827585 + math.floor(sectionCount / 2) * 0.45, 0) or UDim2.new(0.511904776, 0, 0.0344827585 + math.floor(sectionCount / 2) * 0.45, 0)
-            sectionFrame.Size = UDim2.new(0, 195, 0, 120)
+            sectionFrame.Size = UDim2.new(0, 195, 0, 25)
 
             local UICorner_2 = Instance.new("UICorner")
             UICorner_2.Parent = sectionFrame
+            
+            local UIStroke_Section = Instance.new("UIStroke")
+            UIStroke_Section.Color = Color3.fromRGB(84, 84, 84)
+            UIStroke_Section.Thickness = 1
+            UIStroke_Section.Transparency = 0.5
+            UIStroke_Section.Parent = sectionFrame
 
             local SectionName = Instance.new("TextLabel")
             SectionName.Name = "SectionName"
@@ -349,7 +586,7 @@ function UILibrary.new(config)
             SectionName.BackgroundTransparency = 1.000
             SectionName.BorderColor3 = Color3.fromRGB(0, 0, 0)
             SectionName.BorderSizePixel = 0
-            SectionName.Position = UDim2.new(0.0350961536, 0, 0.00633911137, 0)
+            SectionName.Position = UDim2.new(0.0350961536, 0, 0.02, 0)
             SectionName.Size = UDim2.new(0, 18, 0, 16)
             SectionName.Font = Enum.Font.SourceSansBold
             SectionName.Text = name
@@ -357,17 +594,31 @@ function UILibrary.new(config)
             SectionName.TextSize = 12.000
             SectionName.TextXAlignment = Enum.TextXAlignment.Left
 
-            local elementY = 0.25
+            local elementCount = 0
 
             -- Функция обновления размера секции
             local function updateSectionSize()
-                sectionFrame.Size = UDim2.new(0, 195, 0, math.max(120, elementY * 120 + 30))
+                local lastZoneBottom = 20 + elementCount * 30
+                local newHeight = lastZoneBottom + 15
+                sectionFrame.Size = UDim2.new(0, 195, 0, newHeight)
             end
 
             -- CreateToggle
             function section:CreateToggle(name, default, callback, saveId)
                 local saveKey = saveId or name
-                local currentValue = settings[saveKey] ~= nil and settings[saveKey] or default
+                local optionSaveEnabled
+                if settings["_option_save_" .. name] ~= nil then
+                    optionSaveEnabled = settings["_option_save_" .. name]
+                else
+                    optionSaveEnabled = saveId ~= nil
+                end
+                
+                local currentValue
+                if optionSaveEnabled and settings[saveKey] ~= nil then
+                    currentValue = settings[saveKey]
+                else
+                    currentValue = default
+                end
 
                 local ToggleZone = Instance.new("Frame")
                 ToggleZone.Name = "ToggleZone"
@@ -377,7 +628,7 @@ function UILibrary.new(config)
                 ToggleZone.BackgroundTransparency = 1.000
                 ToggleZone.BorderColor3 = Color3.fromRGB(0, 0, 0)
                 ToggleZone.BorderSizePixel = 0
-                ToggleZone.Position = UDim2.new(0, 0, elementY, 0)
+                ToggleZone.Position = UDim2.new(0, 0, 0, 20 + elementCount * 30)
                 ToggleZone.Size = UDim2.new(0, 195, 0, 30)
 
                 -- Option кнопка (справа)
@@ -442,8 +693,10 @@ function UILibrary.new(config)
 
                 local function toggleFunction()
                     currentValue = not currentValue
-                    settings[saveKey] = currentValue
-                    saveSettings(config.FileName or "eschaton_settings.json", settings)
+                    if optionSaveEnabled then
+                        settings[saveKey] = currentValue
+                        saveSettings(config.FileName or "eschaton_settings.json", settings)
+                    end
                     TextButton_2.BackgroundColor3 = currentValue and Color3.fromRGB(1, 128, 203) or Color3.fromRGB(89, 89, 89)
                     TextButton_2.Position = currentValue and UDim2.new(0.566666663, 0, -0.200000003, 0) or UDim2.new(0, 0, -0.200000003, 0)
                     if callback then callback(currentValue) end
@@ -452,16 +705,81 @@ function UILibrary.new(config)
                 Turner.MouseButton1Click:Connect(toggleFunction)
                 TextButton_2.MouseButton1Click:Connect(toggleFunction)
 
-                -- Option клик (откроет окошко настроек)
+          
+                local optionWindow = nil
+                
+
+                if not _G.EschatonOptionWindows then
+                    _G.EschatonOptionWindows = {}
+                end
                 Option.MouseButton1Click:Connect(function()
-                    print("Options for", name, "- Save:", saveId ~= nil)
+                    if optionWindow and optionWindow.Visible then
+                        optionWindow.Visible = false
+                        return
+                    end
+                    
+                    optionWindow = Instance.new("Frame")
+                    optionWindow.Parent = EschatonUI
+                    table.insert(_G.EschatonOptionWindows, optionWindow)
+                    optionWindow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                    optionWindow.BorderSizePixel = 0
+                    optionWindow.Position = UDim2.new(0, Option.AbsolutePosition.X + 14, 0, Option.AbsolutePosition.Y - 5)
+                    optionWindow.Size = UDim2.new(0, 68, 0, 23)
+                    optionWindow.ZIndex = 1000
+                    
+                    local windowCorner = Instance.new("UICorner")
+                    windowCorner.Parent = optionWindow
+                    
+                    local saveToggle = Instance.new("TextButton")
+                    saveToggle.Parent = optionWindow
+                    saveToggle.BackgroundColor3 = optionSaveEnabled and Color3.fromRGB(1, 128, 203) or Color3.fromRGB(89, 89, 89)
+                    saveToggle.BorderSizePixel = 0
+                    saveToggle.Position = UDim2.new(0, 8, 0, 4)
+                    saveToggle.Size = UDim2.new(0, 15, 0, 15)
+                    saveToggle.Font = Enum.Font.SourceSans
+                    saveToggle.Text = optionSaveEnabled and "✔" or ""
+                    saveToggle.TextColor3 = Color3.fromRGB(1, 128, 203)
+                    saveToggle.TextSize = 10
+                    saveToggle.ZIndex = 1001
+                    
+                    local saveLabel = Instance.new("TextLabel")
+                    saveLabel.Parent = optionWindow
+                    saveLabel.BackgroundTransparency = 1
+                    saveLabel.Position = UDim2.new(0, 30, 0, 2)
+                    saveLabel.Size = UDim2.new(0, 35, 0, 19)
+                    saveLabel.Font = Enum.Font.SourceSansBold
+                    saveLabel.Text = "Save"
+                    saveLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                    saveLabel.TextSize = 13
+                    saveLabel.TextXAlignment = Enum.TextXAlignment.Left
+                    saveLabel.ZIndex = 1001
+                    
+                    local toggleCorner = Instance.new("UICorner")
+                    toggleCorner.CornerRadius = UDim.new(0, 3)
+                    toggleCorner.Parent = saveToggle
+                    
+                    saveToggle.MouseButton1Click:Connect(function()
+                        optionSaveEnabled = not optionSaveEnabled
+                        settings["_option_save_" .. name] = optionSaveEnabled
+                        saveSettings(config.FileName or "eschaton_settings.json", settings)
+                        if optionSaveEnabled then
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(1, 128, 203)
+                            saveToggle.Text = "✔"
+                            -- Сохраняем текущее состояние toggle при включении сохранения
+                            settings[saveKey] = currentValue
+                            saveSettings(config.FileName or "eschaton_settings.json", settings)
+                        else
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(89, 89, 89)
+                            saveToggle.Text = ""
+                        end
+                    end)
                 end)
 
                 if currentValue and callback then
                     spawn(function() callback(currentValue) end)
                 end
 
-                elementY = elementY + 0.25
+                elementCount = elementCount + 1
                 updateSectionSize()
             end
 
@@ -474,7 +792,7 @@ function UILibrary.new(config)
                 ButtonZone.BackgroundTransparency = 1.000
                 ButtonZone.BorderColor3 = Color3.fromRGB(0, 0, 0)
                 ButtonZone.BorderSizePixel = 0
-                ButtonZone.Position = UDim2.new(0, 0, elementY, 0)
+                ButtonZone.Position = UDim2.new(0, 0, 0, 20 + elementCount * 30)
                 ButtonZone.Size = UDim2.new(0, 195, 0, 30)
 
                 local TextButton = Instance.new("TextButton")
@@ -526,7 +844,745 @@ function UILibrary.new(config)
                     if callback then callback() end
                 end)
 
-                elementY = elementY + 0.25
+                elementCount = elementCount + 1
+                updateSectionSize()
+            end
+
+            -- CreateSlider
+            function section:CreateSlider(name, min, max, default, callback, saveId)
+                local saveKey = saveId or name
+                local optionSaveEnabled
+                if settings["_option_save_" .. name] ~= nil then
+                    optionSaveEnabled = settings["_option_save_" .. name]
+                else
+                    optionSaveEnabled = saveId ~= nil
+                end
+                
+                local currentValue
+                if optionSaveEnabled and settings[saveKey] ~= nil then
+                    currentValue = settings[saveKey]
+                else
+                    currentValue = default
+                end
+                
+                local SliderZone = Instance.new("Frame")
+                SliderZone.Name = "SliderZone"
+                SliderZone.Parent = sectionFrame
+                SliderZone.Active = true
+                SliderZone.BackgroundTransparency = 1
+                SliderZone.Position = UDim2.new(0, 0, 0, 20 + elementCount * 30)
+                SliderZone.Size = UDim2.new(0, 195, 0, 30)
+                
+                local SliderName = Instance.new("TextLabel")
+                SliderName.Parent = SliderZone
+                SliderName.BackgroundTransparency = 1
+                SliderName.Position = UDim2.new(0.0516529568, 0, 0.233005777, 0)
+                SliderName.Size = UDim2.new(0, 18, 0, 16)
+                SliderName.Font = Enum.Font.SourceSansBold
+                SliderName.Text = name
+                SliderName.TextColor3 = Color3.fromRGB(255, 255, 255)
+                SliderName.TextSize = 13
+                SliderName.TextXAlignment = Enum.TextXAlignment.Left
+                
+                local Option = Instance.new("ImageButton")
+                Option.Parent = SliderZone
+                Option.BackgroundTransparency = 1
+                Option.Position = UDim2.new(0.925128341, 0, 0.291727692, 0)
+                Option.Rotation = 90
+                Option.Size = UDim2.new(0, 14, 0, 13)
+                Option.Image = "rbxassetid://136882854117051"
+                
+                local SliderLine = Instance.new("TextButton")
+                SliderLine.Parent = SliderZone
+                SliderLine.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                SliderLine.BorderSizePixel = 0
+                SliderLine.Position = UDim2.new(0.302564114, 0, 0.4775289, 0)
+                SliderLine.Size = UDim2.new(0, 86, 0, 4)
+                SliderLine.Text = ""
+                
+                local SliderCorner = Instance.new("UICorner")
+                SliderCorner.CornerRadius = UDim.new(0, 5)
+                SliderCorner.Parent = SliderLine
+                
+                local SliderStroke = Instance.new("UIStroke")
+                SliderStroke.Color = Color3.fromRGB(0, 0, 0)
+                SliderStroke.Thickness = 1
+                SliderStroke.Transparency = 0.3
+                SliderStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                SliderStroke.Parent = SliderLine
+                
+                local SliderFill = Instance.new("Frame")
+                SliderFill.Parent = SliderLine
+                SliderFill.BackgroundColor3 = Color3.fromRGB(1, 128, 203)
+                SliderFill.BorderSizePixel = 0
+                SliderFill.Position = UDim2.new(0, 0, 0, 0)
+                SliderFill.Size = UDim2.new((currentValue - min) / (max - min), 0, 1, 0)
+                
+                local FillCorner = Instance.new("UICorner")
+                FillCorner.CornerRadius = UDim.new(0, 5)
+                FillCorner.Parent = SliderFill
+                
+                local SliderValue = Instance.new("TextLabel")
+                SliderValue.Parent = SliderZone
+                SliderValue.BackgroundTransparency = 1
+                SliderValue.Position = UDim2.new(0.784985363, 0, 0.233005777, 0)
+                SliderValue.Size = UDim2.new(0, 18, 0, 16)
+                SliderValue.Font = Enum.Font.SourceSans
+                SliderValue.Text = tostring(currentValue)
+                SliderValue.TextColor3 = Color3.fromRGB(255, 255, 255)
+                SliderValue.TextSize = 13
+                SliderValue.TextXAlignment = Enum.TextXAlignment.Right
+                
+                local SliderMover = Instance.new("TextButton")
+                SliderMover.Parent = SliderZone
+                SliderMover.BackgroundColor3 = Color3.fromRGB(1, 128, 203)
+                SliderMover.BorderSizePixel = 0
+                SliderMover.Position = UDim2.new(0.302564114 + (currentValue - min) / (max - min) * 0.44, 0, 0.4, 0)
+                SliderMover.Size = UDim2.new(0, 10, 0, 10)
+                SliderMover.Text = ""
+                
+                local MoverCorner = Instance.new("UICorner")
+                MoverCorner.CornerRadius = UDim.new(1, 0)
+                MoverCorner.Parent = SliderMover
+                
+                local dragging = false
+                local connection
+                
+                local function updateSlider(input)
+                    local pos = math.clamp((input.Position.X - SliderLine.AbsolutePosition.X) / SliderLine.AbsoluteSize.X, 0, 1)
+                    currentValue = math.floor(min + (max - min) * pos)
+                    SliderMover.Position = UDim2.new(0.302564114 + pos * 0.44, 0, 0.4, 0)
+                    SliderFill.Size = UDim2.new(pos, 0, 1, 0)
+                    SliderValue.Text = tostring(currentValue)
+                    if optionSaveEnabled then
+                        settings[saveKey] = currentValue
+                        saveSettings(config.FileName or "eschaton_settings.json", settings)
+                    end
+                    if callback then callback(currentValue) end
+                end
+                
+                local function startDragging(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        dragging = true
+                        updateSlider(input)
+                        
+                        connection = UserInputService.InputChanged:Connect(function(input)
+                            if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+                                updateSlider(input)
+                            end
+                        end)
+                    end
+                end
+                
+                local function stopDragging(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        dragging = false
+                        if connection then
+                            connection:Disconnect()
+                            connection = nil
+                        end
+                    end
+                end
+                
+                SliderLine.InputBegan:Connect(startDragging)
+                SliderMover.InputBegan:Connect(startDragging)
+                UserInputService.InputEnded:Connect(stopDragging)
+                
+                -- Option клик
+                local optionWindow = nil
+                if not _G.EschatonOptionWindows then
+                    _G.EschatonOptionWindows = {}
+                end
+                Option.MouseButton1Click:Connect(function()
+                    if optionWindow and optionWindow.Visible then
+                        optionWindow.Visible = false
+                        return
+                    end
+                    
+                    optionWindow = Instance.new("Frame")
+                    optionWindow.Parent = EschatonUI
+                    table.insert(_G.EschatonOptionWindows, optionWindow)
+                    optionWindow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                    optionWindow.BorderSizePixel = 0
+                    optionWindow.Position = UDim2.new(0, Option.AbsolutePosition.X + 14, 0, Option.AbsolutePosition.Y - 5)
+                    optionWindow.Size = UDim2.new(0, 68, 0, 23)
+                    optionWindow.ZIndex = 1000
+                    
+                    local windowCorner = Instance.new("UICorner")
+                    windowCorner.Parent = optionWindow
+                    
+                    local saveToggle = Instance.new("TextButton")
+                    saveToggle.Parent = optionWindow
+                    saveToggle.BackgroundColor3 = optionSaveEnabled and Color3.fromRGB(1, 128, 203) or Color3.fromRGB(89, 89, 89)
+                    saveToggle.BorderSizePixel = 0
+                    saveToggle.Position = UDim2.new(0, 8, 0, 4)
+                    saveToggle.Size = UDim2.new(0, 15, 0, 15)
+                    saveToggle.Font = Enum.Font.SourceSans
+                    saveToggle.Text = optionSaveEnabled and "✔" or ""
+                    saveToggle.TextColor3 = Color3.fromRGB(1, 128, 203)
+                    saveToggle.TextSize = 10
+                    saveToggle.ZIndex = 1001
+                    
+                    local saveLabel = Instance.new("TextLabel")
+                    saveLabel.Parent = optionWindow
+                    saveLabel.BackgroundTransparency = 1
+                    saveLabel.Position = UDim2.new(0, 30, 0, 2)
+                    saveLabel.Size = UDim2.new(0, 35, 0, 19)
+                    saveLabel.Font = Enum.Font.SourceSansBold
+                    saveLabel.Text = "Save"
+                    saveLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                    saveLabel.TextSize = 13
+                    saveLabel.TextXAlignment = Enum.TextXAlignment.Left
+                    saveLabel.ZIndex = 1001
+                    
+                    local toggleCorner = Instance.new("UICorner")
+                    toggleCorner.CornerRadius = UDim.new(0, 3)
+                    toggleCorner.Parent = saveToggle
+                    
+                    saveToggle.MouseButton1Click:Connect(function()
+                        optionSaveEnabled = not optionSaveEnabled
+                        settings["_option_save_" .. name] = optionSaveEnabled
+                        saveSettings(config.FileName or "eschaton_settings.json", settings)
+                        if optionSaveEnabled then
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(1, 128, 203)
+                            saveToggle.Text = "✔"
+                            settings[saveKey] = currentValue
+                            saveSettings(config.FileName or "eschaton_settings.json", settings)
+                        else
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(89, 89, 89)
+                            saveToggle.Text = ""
+                        end
+                    end)
+                end)
+                
+                if callback then
+                    spawn(function() callback(currentValue) end)
+                end
+                
+                elementCount = elementCount + 1
+                updateSectionSize()
+            end
+            
+            -- CreateDropdown
+            function section:CreateDropdown(name, options, default, callback, saveId)
+                local saveKey = saveId or name
+                local optionSaveEnabled
+                if settings["_option_save_" .. name] ~= nil then
+                    optionSaveEnabled = settings["_option_save_" .. name]
+                else
+                    optionSaveEnabled = saveId ~= nil
+                end
+                
+                local currentValue
+                if optionSaveEnabled and settings[saveKey] then
+                    currentValue = settings[saveKey]
+                else
+                    currentValue = default or options[1]
+                end
+                
+                local DropdownZone = Instance.new("Frame")
+                DropdownZone.Parent = sectionFrame
+                DropdownZone.BackgroundTransparency = 1
+                DropdownZone.Position = UDim2.new(0, 0, 0, 20 + elementCount * 30)
+                DropdownZone.Size = UDim2.new(0, 195, 0, 30)
+                
+                local DropdownButton = Instance.new("TextButton")
+                DropdownButton.Parent = DropdownZone
+                DropdownButton.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                DropdownButton.BorderSizePixel = 0
+                DropdownButton.Position = UDim2.new(0.05, 0, 0.265, 0)
+                DropdownButton.Size = UDim2.new(0, 170, 0, 25)
+                DropdownButton.Text = ""
+                
+                local DropdownCorner = Instance.new("UICorner")
+                DropdownCorner.Parent = DropdownButton
+                
+                local DropdownValue = Instance.new("TextLabel")
+                DropdownValue.Parent = DropdownButton
+                DropdownValue.BackgroundTransparency = 1
+                DropdownValue.Position = UDim2.new(0.0465248339, 0, 0.166339114, 0)
+                DropdownValue.Size = UDim2.new(0, 18, 0, 16)
+                DropdownValue.Font = Enum.Font.SourceSansBold
+                DropdownValue.Text = currentValue
+                DropdownValue.TextColor3 = Color3.fromRGB(255, 255, 255)
+                DropdownValue.TextSize = 13
+                DropdownValue.TextXAlignment = Enum.TextXAlignment.Left
+                
+                local DropdownName = Instance.new("TextLabel")
+                DropdownName.Parent = DropdownZone
+                DropdownName.BackgroundTransparency = 1
+                DropdownName.Position = UDim2.new(0.451653272, 0, -0.0498085022, 0)
+                DropdownName.Size = UDim2.new(0, 18, 0, 8)
+                DropdownName.Font = Enum.Font.SourceSans
+                DropdownName.Text = name
+                DropdownName.TextColor3 = Color3.fromRGB(255, 255, 255)
+                DropdownName.TextSize = 11
+                
+                local Option = Instance.new("ImageButton")
+                Option.Parent = DropdownZone
+                Option.BackgroundTransparency = 1
+                Option.Position = UDim2.new(0.920000136, 0, 0.433394611, 0)
+                Option.Rotation = 90
+                Option.Size = UDim2.new(0, 14, 0, 13)
+                Option.Image = "rbxassetid://136882854117051"
+                
+                local DropdownArrow = Instance.new("ImageButton")
+                DropdownArrow.Parent = DropdownZone
+                DropdownArrow.BackgroundTransparency = 1
+                DropdownArrow.Position = UDim2.new(0.835897446, 0, 0.483394623, 0)
+                DropdownArrow.Size = UDim2.new(0, 9, 0, 9)
+                DropdownArrow.Image = "rbxassetid://97082881520404"
+                
+                local isOpen = false
+                local optionsList = Instance.new("Frame")
+                optionsList.Parent = EschatonUI
+                optionsList.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                optionsList.BorderSizePixel = 0
+                optionsList.Position = UDim2.new(0, 0, 0, 0)
+                optionsList.Size = UDim2.new(0, 170, 0, #options * 20)
+                optionsList.Visible = false
+                optionsList.ZIndex = 1000
+                
+                local listCorner = Instance.new("UICorner")
+                listCorner.Parent = optionsList
+                
+                for i, option in ipairs(options) do
+                    local optionButton = Instance.new("TextButton")
+                    optionButton.Parent = optionsList
+                    optionButton.BackgroundTransparency = 1
+                    optionButton.Position = UDim2.new(0, 0, 0, (i-1) * 20)
+                    optionButton.Size = UDim2.new(1, 0, 0, 20)
+                    optionButton.Font = Enum.Font.SourceSans
+                    optionButton.Text = option
+                    optionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                    optionButton.TextSize = 12
+                    optionButton.ZIndex = 1001
+                    
+                    optionButton.MouseButton1Click:Connect(function()
+                        currentValue = option
+                        DropdownValue.Text = option
+                        if optionSaveEnabled then
+                            settings[saveKey] = currentValue
+                            saveSettings(config.FileName or "eschaton_settings.json", settings)
+                        end
+                        optionsList.Visible = false
+                        isOpen = false
+                        if callback then callback(currentValue) end
+                    end)
+                end
+                
+                local function toggleDropdown()
+                    isOpen = not isOpen
+                    if isOpen then
+                        local absolutePos = DropdownButton.AbsolutePosition
+                        optionsList.Position = UDim2.new(0, absolutePos.X, 0, absolutePos.Y + 25)
+                    end
+                    optionsList.Visible = isOpen
+                end
+                
+                DropdownButton.MouseButton1Click:Connect(toggleDropdown)
+                DropdownArrow.MouseButton1Click:Connect(toggleDropdown)
+                
+                -- Option клик
+                local optionWindow = nil
+                if not _G.EschatonOptionWindows then
+                    _G.EschatonOptionWindows = {}
+                end
+                Option.MouseButton1Click:Connect(function()
+                    if optionWindow and optionWindow.Visible then
+                        optionWindow.Visible = false
+                        return
+                    end
+                    
+                    optionWindow = Instance.new("Frame")
+                    optionWindow.Parent = EschatonUI
+                    table.insert(_G.EschatonOptionWindows, optionWindow)
+                    optionWindow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                    optionWindow.BorderSizePixel = 0
+                    optionWindow.Position = UDim2.new(0, Option.AbsolutePosition.X + 14, 0, Option.AbsolutePosition.Y - 5)
+                    optionWindow.Size = UDim2.new(0, 68, 0, 23)
+                    optionWindow.ZIndex = 1000
+                    
+                    local windowCorner = Instance.new("UICorner")
+                    windowCorner.Parent = optionWindow
+                    
+                    local saveToggle = Instance.new("TextButton")
+                    saveToggle.Parent = optionWindow
+                    saveToggle.BackgroundColor3 = optionSaveEnabled and Color3.fromRGB(1, 128, 203) or Color3.fromRGB(89, 89, 89)
+                    saveToggle.BorderSizePixel = 0
+                    saveToggle.Position = UDim2.new(0, 8, 0, 4)
+                    saveToggle.Size = UDim2.new(0, 15, 0, 15)
+                    saveToggle.Font = Enum.Font.SourceSans
+                    saveToggle.Text = optionSaveEnabled and "✔" or ""
+                    saveToggle.TextColor3 = Color3.fromRGB(1, 128, 203)
+                    saveToggle.TextSize = 10
+                    saveToggle.ZIndex = 1001
+                    
+                    local saveLabel = Instance.new("TextLabel")
+                    saveLabel.Parent = optionWindow
+                    saveLabel.BackgroundTransparency = 1
+                    saveLabel.Position = UDim2.new(0, 30, 0, 2)
+                    saveLabel.Size = UDim2.new(0, 35, 0, 19)
+                    saveLabel.Font = Enum.Font.SourceSansBold
+                    saveLabel.Text = "Save"
+                    saveLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                    saveLabel.TextSize = 13
+                    saveLabel.TextXAlignment = Enum.TextXAlignment.Left
+                    saveLabel.ZIndex = 1001
+                    
+                    local toggleCorner = Instance.new("UICorner")
+                    toggleCorner.CornerRadius = UDim.new(0, 3)
+                    toggleCorner.Parent = saveToggle
+                    
+                    saveToggle.MouseButton1Click:Connect(function()
+                        optionSaveEnabled = not optionSaveEnabled
+                        settings["_option_save_" .. name] = optionSaveEnabled
+                        saveSettings(config.FileName or "eschaton_settings.json", settings)
+                        if optionSaveEnabled then
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(1, 128, 203)
+                            saveToggle.Text = "✔"
+                            settings[saveKey] = currentValue
+                            saveSettings(config.FileName or "eschaton_settings.json", settings)
+                        else
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(89, 89, 89)
+                            saveToggle.Text = ""
+                        end
+                    end)
+                end)
+                
+                if callback then
+                    spawn(function() callback(currentValue) end)
+                end
+                
+                elementCount = elementCount + 1
+                updateSectionSize()
+            end
+            
+            -- CreateBind
+            function section:CreateBind(name, default, callback, saveId)
+                local saveKey = saveId or name
+                local optionSaveEnabled
+                if settings["_option_save_" .. name] ~= nil then
+                    optionSaveEnabled = settings["_option_save_" .. name]
+                else
+                    optionSaveEnabled = saveId ~= nil
+                end
+                
+                local currentBind
+                if optionSaveEnabled and settings[saveKey] then
+                    currentBind = settings[saveKey]
+                else
+                    currentBind = default or "None"
+                end
+                
+                local BindZone = Instance.new("Frame")
+                BindZone.Parent = sectionFrame
+                BindZone.Active = true
+                BindZone.BackgroundTransparency = 1
+                BindZone.Position = UDim2.new(0, 0, 0, 20 + elementCount * 30)
+                BindZone.Size = UDim2.new(0, 195, 0, 30)
+                
+                local BindName = Instance.new("TextLabel")
+                BindName.Parent = BindZone
+                BindName.BackgroundTransparency = 1
+                BindName.Position = UDim2.new(0.0516529568, 0, 0.233005777, 0)
+                BindName.Size = UDim2.new(0, 18, 0, 16)
+                BindName.Font = Enum.Font.SourceSansBold
+                BindName.Text = name
+                BindName.TextColor3 = Color3.fromRGB(255, 255, 255)
+                BindName.TextSize = 13
+                BindName.TextXAlignment = Enum.TextXAlignment.Left
+                
+                local Option = Instance.new("ImageButton")
+                Option.Name = "Option"
+                Option.Parent = BindZone
+                Option.BackgroundTransparency = 1
+                Option.Position = UDim2.new(0.925128341, 0, 0.291727692, 0)
+                Option.Rotation = 90
+                Option.Size = UDim2.new(0, 14, 0, 13)
+                Option.Image = "rbxassetid://136882854117051"
+                
+                local Bind = Instance.new("TextButton")
+                Bind.Parent = BindZone
+                Bind.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                Bind.BorderSizePixel = 0
+                Bind.Position = UDim2.new(0.533333361, 0, 0.233005777, 0)
+                Bind.Size = UDim2.new(0, 70, 0, 16)
+                Bind.Font = Enum.Font.SourceSansBold
+                Bind.Text = currentBind
+                Bind.TextColor3 = Color3.fromRGB(255, 255, 255)
+                Bind.TextSize = 12
+                
+                local BindCorner = Instance.new("UICorner")
+                BindCorner.CornerRadius = UDim.new(0, 5)
+                BindCorner.Parent = Bind
+                
+                local BindStroke = Instance.new("UIStroke")
+                BindStroke.Color = Color3.fromRGB(0, 0, 0)
+                BindStroke.Thickness = 1
+                BindStroke.Transparency = 0.3
+                BindStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                BindStroke.Parent = Bind
+                
+                local isBinding = false
+                
+                local function updateBind(key)
+                    currentBind = key
+                    Bind.Text = key
+                    if optionSaveEnabled then
+                        settings[saveKey] = currentBind
+                        saveSettings(config.FileName or "eschaton_settings.json", settings)
+                    end
+                end
+                
+                Bind.MouseButton1Click:Connect(function()
+                    if not isBinding then
+                        isBinding = true
+                        Bind.Text = "..."
+                        
+                        local connection
+                        connection = UserInputService.InputBegan:Connect(function(input, processed)
+                            if not processed then
+                                local keyName = input.KeyCode.Name
+                                if keyName ~= "Unknown" then
+                                    updateBind(keyName)
+                                    isBinding = false
+                                    connection:Disconnect()
+                                end
+                            end
+                        end)
+                    end
+                end)
+                
+                -- Активация бинда
+                UserInputService.InputBegan:Connect(function(input, processed)
+                    if not processed and input.KeyCode.Name == currentBind and callback then
+                        callback()
+                    end
+                end)
+                
+                -- Option клик
+                local optionWindow = nil
+                if not _G.EschatonOptionWindows then
+                    _G.EschatonOptionWindows = {}
+                end
+                Option.MouseButton1Click:Connect(function()
+                    if optionWindow and optionWindow.Visible then
+                        optionWindow.Visible = false
+                        return
+                    end
+                    
+                    optionWindow = Instance.new("Frame")
+                    optionWindow.Parent = EschatonUI
+                    table.insert(_G.EschatonOptionWindows, optionWindow)
+                    optionWindow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                    optionWindow.BorderSizePixel = 0
+                    optionWindow.Position = UDim2.new(0, Option.AbsolutePosition.X + 14, 0, Option.AbsolutePosition.Y - 5)
+                    optionWindow.Size = UDim2.new(0, 68, 0, 23)
+                    optionWindow.ZIndex = 1000
+                    
+                    local windowCorner = Instance.new("UICorner")
+                    windowCorner.Parent = optionWindow
+                    
+                    local saveToggle = Instance.new("TextButton")
+                    saveToggle.Parent = optionWindow
+                    saveToggle.BackgroundColor3 = optionSaveEnabled and Color3.fromRGB(1, 128, 203) or Color3.fromRGB(89, 89, 89)
+                    saveToggle.BorderSizePixel = 0
+                    saveToggle.Position = UDim2.new(0, 8, 0, 4)
+                    saveToggle.Size = UDim2.new(0, 15, 0, 15)
+                    saveToggle.Font = Enum.Font.SourceSans
+                    saveToggle.Text = optionSaveEnabled and "✔" or ""
+                    saveToggle.TextColor3 = Color3.fromRGB(1, 128, 203)
+                    saveToggle.TextSize = 10
+                    saveToggle.ZIndex = 1001
+                    
+                    local saveLabel = Instance.new("TextLabel")
+                    saveLabel.Parent = optionWindow
+                    saveLabel.BackgroundTransparency = 1
+                    saveLabel.Position = UDim2.new(0, 30, 0, 2)
+                    saveLabel.Size = UDim2.new(0, 35, 0, 19)
+                    saveLabel.Font = Enum.Font.SourceSansBold
+                    saveLabel.Text = "Save"
+                    saveLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                    saveLabel.TextSize = 13
+                    saveLabel.TextXAlignment = Enum.TextXAlignment.Left
+                    saveLabel.ZIndex = 1001
+                    
+                    local toggleCorner = Instance.new("UICorner")
+                    toggleCorner.CornerRadius = UDim.new(0, 3)
+                    toggleCorner.Parent = saveToggle
+                    
+                    saveToggle.MouseButton1Click:Connect(function()
+                        optionSaveEnabled = not optionSaveEnabled
+                        settings["_option_save_" .. name] = optionSaveEnabled
+                        saveSettings(config.FileName or "eschaton_settings.json", settings)
+                        if optionSaveEnabled then
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(1, 128, 203)
+                            saveToggle.Text = "✔"
+                            settings[saveKey] = currentBind
+                            saveSettings(config.FileName or "eschaton_settings.json", settings)
+                        else
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(89, 89, 89)
+                            saveToggle.Text = ""
+                        end
+                    end)
+                end)
+                
+                elementCount = elementCount + 1
+                updateSectionSize()
+            end
+            
+            -- CreateInput
+            function section:CreateInput(name, placeholder, callback, saveId)
+                local saveKey = saveId or name
+                local optionSaveEnabled
+                if settings["_option_save_" .. name] ~= nil then
+                    optionSaveEnabled = settings["_option_save_" .. name]
+                else
+                    optionSaveEnabled = saveId ~= nil
+                end
+                
+                local currentValue
+                if optionSaveEnabled and settings[saveKey] then
+                    currentValue = settings[saveKey]
+                else
+                    currentValue = ""
+                end
+                
+                local InputZone = Instance.new("Frame")
+                InputZone.Name = "InputZone"
+                InputZone.Parent = sectionFrame
+                InputZone.BackgroundTransparency = 1
+                InputZone.Position = UDim2.new(0, 0, 0, 20 + elementCount * 30)
+                InputZone.Size = UDim2.new(0, 195, 0, 40)
+                
+                local Input = Instance.new("TextBox")
+                Input.Name = "Input"
+                Input.Parent = InputZone
+                Input.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+                Input.BorderSizePixel = 0
+                Input.Position = UDim2.new(0.0358974375, 0, 0.4, 0)
+                Input.Size = UDim2.new(0, 173, 0, 20)
+                Input.Font = Enum.Font.SourceSans
+                Input.Text = currentValue
+                Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+                Input.TextSize = 12
+                Input.PlaceholderText = placeholder or "Input..."
+                Input.PlaceholderColor3 = Color3.fromRGB(104, 104, 104)
+                Input.TextXAlignment = Enum.TextXAlignment.Left
+                
+                local InputPadding = Instance.new("UIPadding")
+                InputPadding.PaddingLeft = UDim.new(0, 8)
+                InputPadding.Parent = Input
+                
+                local InputCorner = Instance.new("UICorner")
+                InputCorner.Parent = Input
+                
+                local InputStroke = Instance.new("UIStroke")
+                InputStroke.Color = Color3.fromRGB(0, 0, 0)
+                InputStroke.Thickness = 1
+                InputStroke.Transparency = 0.3
+                InputStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                InputStroke.Parent = Input
+                
+                local InputName = Instance.new("TextLabel")
+                InputName.Name = "InputName"
+                InputName.Parent = InputZone
+                InputName.BackgroundTransparency = 1
+                InputName.Position = UDim2.new(0.0465249084, 0, 0.1, 0)
+                InputName.Size = UDim2.new(0, 18, 0, 9)
+                InputName.Font = Enum.Font.SourceSans
+                InputName.Text = name
+                InputName.TextColor3 = Color3.fromRGB(255, 255, 255)
+                InputName.TextSize = 11
+                InputName.TextXAlignment = Enum.TextXAlignment.Left
+                
+                local Option = Instance.new("ImageButton")
+                Option.Name = "Option"
+                Option.Parent = InputZone
+                Option.BackgroundTransparency = 1
+                Option.Position = UDim2.new(0.925128341, 0, 0.5, 0)
+                Option.Rotation = 90
+                Option.Size = UDim2.new(0, 14, 0, 13)
+                Option.Image = "rbxassetid://136882854117051"
+                
+                Input.FocusLost:Connect(function()
+                    currentValue = Input.Text
+                    if optionSaveEnabled then
+                        settings[saveKey] = currentValue
+                        saveSettings(config.FileName or "eschaton_settings.json", settings)
+                    end
+                    if callback then callback(currentValue) end
+                end)
+                
+                -- Option клик
+                local optionWindow = nil
+                if not _G.EschatonOptionWindows then
+                    _G.EschatonOptionWindows = {}
+                end
+                Option.MouseButton1Click:Connect(function()
+                    if optionWindow and optionWindow.Visible then
+                        optionWindow.Visible = false
+                        return
+                    end
+                    
+                    optionWindow = Instance.new("Frame")
+                    optionWindow.Parent = EschatonUI
+                    table.insert(_G.EschatonOptionWindows, optionWindow)
+                    optionWindow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                    optionWindow.BorderSizePixel = 0
+                    optionWindow.Position = UDim2.new(0, Option.AbsolutePosition.X + 14, 0, Option.AbsolutePosition.Y - 5)
+                    optionWindow.Size = UDim2.new(0, 68, 0, 23)
+                    optionWindow.ZIndex = 1000
+                    
+                    local windowCorner = Instance.new("UICorner")
+                    windowCorner.Parent = optionWindow
+                    
+                    local saveToggle = Instance.new("TextButton")
+                    saveToggle.Parent = optionWindow
+                    saveToggle.BackgroundColor3 = optionSaveEnabled and Color3.fromRGB(1, 128, 203) or Color3.fromRGB(89, 89, 89)
+                    saveToggle.BorderSizePixel = 0
+                    saveToggle.Position = UDim2.new(0, 8, 0, 4)
+                    saveToggle.Size = UDim2.new(0, 15, 0, 15)
+                    saveToggle.Font = Enum.Font.SourceSans
+                    saveToggle.Text = optionSaveEnabled and "✔" or ""
+                    saveToggle.TextColor3 = Color3.fromRGB(1, 128, 203)
+                    saveToggle.TextSize = 10
+                    saveToggle.ZIndex = 1001
+                    
+                    local saveLabel = Instance.new("TextLabel")
+                    saveLabel.Parent = optionWindow
+                    saveLabel.BackgroundTransparency = 1
+                    saveLabel.Position = UDim2.new(0, 30, 0, 2)
+                    saveLabel.Size = UDim2.new(0, 35, 0, 19)
+                    saveLabel.Font = Enum.Font.SourceSansBold
+                    saveLabel.Text = "Save"
+                    saveLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                    saveLabel.TextSize = 13
+                    saveLabel.TextXAlignment = Enum.TextXAlignment.Left
+                    saveLabel.ZIndex = 1001
+                    
+                    local toggleCorner = Instance.new("UICorner")
+                    toggleCorner.CornerRadius = UDim.new(0, 3)
+                    toggleCorner.Parent = saveToggle
+                    
+                    saveToggle.MouseButton1Click:Connect(function()
+                        optionSaveEnabled = not optionSaveEnabled
+                        settings["_option_save_" .. name] = optionSaveEnabled
+                        saveSettings(config.FileName or "eschaton_settings.json", settings)
+                        if optionSaveEnabled then
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(1, 128, 203)
+                            saveToggle.Text = "✔"
+                            settings[saveKey] = currentValue
+                            saveSettings(config.FileName or "eschaton_settings.json", settings)
+                        else
+                            saveToggle.BackgroundColor3 = Color3.fromRGB(89, 89, 89)
+                            saveToggle.Text = ""
+                        end
+                    end)
+                end)
+                
+                elementCount = elementCount + 1
                 updateSectionSize()
             end
 
@@ -536,19 +1592,243 @@ function UILibrary.new(config)
         return tab
     end
 
+    -- Система уведомлений
+    local NotifiUI = Instance.new("ScreenGui")
+    NotifiUI.Name = "EschatonNotifi"
+    NotifiUI.Parent = game:GetService("CoreGui")
+    NotifiUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    NotifiList = Instance.new("Frame")
+    NotifiList.Name = "NotifiList"
+    NotifiList.Parent = NotifiUI
+    NotifiList.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    NotifiList.BackgroundTransparency = 0.9
+    NotifiList.ZIndex = 1002
+    NotifiList.BorderSizePixel = 2
+    NotifiList.BorderColor3 = Color3.fromRGB(1, 128, 203)
+    NotifiList.Position = settings["notifi_position"] and UDim2.new(settings["notifi_position"].X.Scale, settings["notifi_position"].X.Offset, settings["notifi_position"].Y.Scale, settings["notifi_position"].Y.Offset) or UDim2.new(0.793048978, 0, 0.74242425, 0)
+    NotifiList.Size = UDim2.new(0, 250, 0, 150)
+    NotifiList.ClipsDescendants = true
+    NotifiList.Visible = false
+    
+    local NotifiCorner = Instance.new("UICorner")
+    NotifiCorner.Parent = NotifiList
+    
+    local NotifiStroke = Instance.new("UIStroke")
+    NotifiStroke.Color = Color3.fromRGB(1, 128, 203)
+    NotifiStroke.Thickness = 3
+    NotifiStroke.Transparency = 1
+    NotifiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    NotifiStroke.Parent = NotifiList
+    
+    -- Замутнение фона
+    ConfigBlur = Instance.new("Frame")
+    ConfigBlur.Name = "ConfigBlur"
+    ConfigBlur.Parent = EschatonUI
+    ConfigBlur.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    ConfigBlur.BackgroundTransparency = 1
+    ConfigBlur.BorderSizePixel = 0
+    ConfigBlur.Position = UDim2.new(-1, 0, -1, 0)
+    ConfigBlur.Size = UDim2.new(3, 0, 3, 0)
+    ConfigBlur.Visible = false
+    ConfigBlur.ZIndex = 1001
+    
+    configMode = false
+    
+    -- Перетаскивание NotifiList
+    NotifiList.Active = true
+    local draggingNotifi = false
+    local notifiDragStart = nil
+    local notifiStartPos = nil
+    local notifiDragConnection = nil
+    
+    local function startNotifiDrag(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and configMode == true then
+            draggingNotifi = true
+            notifiDragStart = input.Position
+            notifiStartPos = NotifiList.Position
+            
+            notifiDragConnection = UserInputService.InputChanged:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseMovement and draggingNotifi then
+                    local delta = input.Position - notifiDragStart
+                    NotifiList.Position = UDim2.new(notifiStartPos.X.Scale, notifiStartPos.X.Offset + delta.X, notifiStartPos.Y.Scale, notifiStartPos.Y.Offset + delta.Y)
+                end
+            end)
+        end
+    end
+    
+    NotifiList.InputBegan:Connect(startNotifiDrag)
+    
+    local function updateNotifiStroke()
+        NotifiStroke.Transparency = configMode and 0 or 1
+    end
+    
+    _G.updateNotifiStroke = updateNotifiStroke
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and draggingNotifi then
+            draggingNotifi = false
+            if notifiDragConnection then
+                notifiDragConnection:Disconnect()
+                notifiDragConnection = nil
+            end
+            -- Сохраняем позицию
+            settings["notifi_position"] = {
+                X = {Scale = NotifiList.Position.X.Scale, Offset = NotifiList.Position.X.Offset},
+                Y = {Scale = NotifiList.Position.Y.Scale, Offset = NotifiList.Position.Y.Offset}
+            }
+            saveSettings(config.FileName or "eschaton_settings.json", settings)
+        end
+    end)
+    
+    local UIListLayout = Instance.new("UIListLayout")
+    UIListLayout.Parent = NotifiList
+    UIListLayout.FillDirection = Enum.FillDirection.Vertical
+    UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+    UIListLayout.Padding = UDim.new(0, 5)
+    
+    local notificationCount = 0
+    
+    function ui:Notification(text)
+        -- Показываем NotifiList для уведомлений
+        if not configMode then
+            NotifiList.Visible = true
+        end
+        
+        local notification = Instance.new("Frame")
+        notification.Name = "Notification" .. notificationCount
+        notification.Parent = NotifiList
+        notification.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+        notification.BackgroundTransparency = 0.4
+        notification.BorderSizePixel = 0
+        notification.ClipsDescendants = true
+        notification.Size = UDim2.new(0, 0, 0, 25)
+        notification.LayoutOrder = notificationCount
+        
+        local notifCorner = Instance.new("UICorner")
+        notifCorner.Parent = notification
+        
+        local point = Instance.new("Frame")
+        point.Name = "Point"
+        point.Parent = notification
+        point.BackgroundColor3 = Color3.fromRGB(1, 128, 203)
+        point.BorderSizePixel = 0
+        point.Position = UDim2.new(0.101472169, 0, -0.280002445, 0)
+        point.Size = UDim2.new(0, 2, 0, 55)
+        
+        local pointCorner = Instance.new("UICorner")
+        pointCorner.CornerRadius = UDim.new(1, 0)
+        pointCorner.Parent = point
+        
+        local imageNotifi = Instance.new("ImageLabel")
+        imageNotifi.Name = "ImageNotifi"
+        imageNotifi.Parent = notification
+        imageNotifi.BackgroundColor3 = Color3.fromRGB(23, 23, 23)
+        imageNotifi.BorderSizePixel = 0
+        imageNotifi.Position = UDim2.new(0.02, 0, 0.2, 0)
+        imageNotifi.Size = UDim2.new(0, 15, 0, 15)
+        imageNotifi.ZIndex = 6
+        imageNotifi.Image = "rbxassetid://107336731168834"
+        
+        local imageCorner = Instance.new("UICorner")
+        imageCorner.CornerRadius = UDim.new(0, 4)
+        imageCorner.Parent = imageNotifi
+        
+        local notifiText = Instance.new("TextLabel")
+        notifiText.Name = "NotifiText"
+        notifiText.Parent = notification
+        notifiText.BackgroundTransparency = 1
+        notifiText.BorderSizePixel = 0
+        notifiText.Position = UDim2.new(0.13485302, 0, 0.0983569324, 0)
+        notifiText.Size = UDim2.new(0, 207, 0, 19)
+        notifiText.Font = Enum.Font.SourceSansBold
+        notifiText.Text = text or "Notification"
+        notifiText.TextColor3 = Color3.fromRGB(255, 255, 255)
+        notifiText.TextSize = 13
+        notifiText.TextXAlignment = Enum.TextXAlignment.Left
+        
+        -- Анимация появления
+        notification:TweenSize(UDim2.new(0, 250, 0, 25), "Out", "Quad", 0.3, true)
+        
+        notificationCount = notificationCount + 1
+        
+        -- Автоудаление через 3 секунды
+        spawn(function()
+            wait(3)
+            notification:TweenSize(UDim2.new(0, 0, 0, 25), "In", "Quad", 0.3, true)
+            wait(0.3)
+            notification:Destroy()
+            -- Скрываем NotifiList если нет уведомлений
+            if not configMode and #NotifiList:GetChildren() <= 1 then
+                NotifiList.Visible = false
+            end
+        end)
+    end
+    
     return ui
 end
 
--- Глобальные функции
-function CreateToggle(config)
-    return config.section:CreateToggle(config.name or "Toggle", config.default or false, config.callback, config.save and (config.id or config.name) or nil)
+-- Новая система создания элементов
+function create(elementType, config)
+    local saveName = config.SaveName
+    
+    if elementType == "Toggle" then
+        return config.Section:CreateToggle(
+            config.Name or "Toggle",
+            config.Default or false,
+            config.Callback,
+            saveName
+        )
+    elseif elementType == "Button" then
+        return config.Section:CreateButton(
+            config.Name or "Button",
+            config.Callback
+        )
+    elseif elementType == "Slider" then
+        return config.Section:CreateSlider(
+            config.Name or "Slider",
+            config.Min or 0,
+            config.Max or 100,
+            config.Default or 0,
+            config.Callback,
+            saveName
+        )
+    elseif elementType == "Dropdown" then
+        return config.Section:CreateDropdown(
+            config.Name or "Dropdown",
+            config.Options or {"Option 1"},
+            config.Default,
+            config.Callback,
+            saveName
+        )
+    elseif elementType == "Bind" then
+        return config.Section:CreateBind(
+            config.Name or "Bind",
+            config.Default or "None",
+            config.Callback,
+            saveName
+        )
+    elseif elementType == "Input" then
+        return config.Section:CreateInput(
+            config.Name or "Input",
+            config.Placeholder or "Input...",
+            config.Callback,
+            saveName
+        )
+    end
 end
 
-function CreateButton(config)
-    return config.section:CreateButton(config.name or "Button", config.callback)
+_G.create = create
+
+-- Глобальная функция уведомлений
+function notification(text)
+    if _G.EschatonUI then
+        _G.EschatonUI:Notification(text)
+    end
 end
 
-_G.CreateToggle = CreateToggle
-_G.CreateButton = CreateButton
+_G.notification = notification
 
 return UILibrary
