@@ -391,6 +391,7 @@ function UILibrary.new(config)
         ConfigBlur.BackgroundTransparency = 0.5
         NotifiList.Visible = true
         NotifiList.BackgroundTransparency = 0.9
+        NotifiList.BorderColor3 = Color3.fromRGB(1, 128, 203)
         if NotifiStroke then
             NotifiStroke.Transparency = 0
         end
@@ -502,11 +503,9 @@ function UILibrary.new(config)
                 ConfigBlur.Visible = false
                 ConfigBlur.BackgroundTransparency = 1
             end
-            if NotifiList and #NotifiList:GetChildren() <= 1 then
-                NotifiList.Visible = false
-            end
             if NotifiList then
                 NotifiList.BackgroundTransparency = 1
+                NotifiList.BorderColor3 = Color3.fromRGB(23, 23, 23)
             end
             if NotifiStroke then
                 NotifiStroke.Transparency = 1
@@ -540,24 +539,47 @@ function UILibrary.new(config)
             end
         end)
 
-        function tab:CreateSection(name)
-            local section = {}
-            local sectionCount = 0
-            for _, child in pairs(tabContainer:GetChildren()) do
-                if child:IsA("Frame") and child.Name:find("Section") then
-                    sectionCount = sectionCount + 1
+        local leftSections = {}
+        local rightSections = {}
+        
+        local function updateSectionsPositions(side)
+            local sections = side == "left" and leftSections or rightSections
+            local yOffset = 10
+            
+            for i, sec in ipairs(sections) do
+                if i > 1 then
+                    yOffset = yOffset + 10
                 end
+                sec.frame.Position = UDim2.new(side == "left" and 0.0238095243 or 0.511904776, 0, 0, yOffset)
+                yOffset = yOffset + sec.frame.Size.Y.Offset
             end
-
-            local isLeft = sectionCount % 2 == 0
+        end
+        
+        function tab:CreateSection(name, side)
+            local section = {}
+            side = side or (#leftSections <= #rightSections and "left" or "right")
+            local isLeft = side == "left"
+            
             local sectionFrame = Instance.new("Frame")
             sectionFrame.Name = name
             sectionFrame.Parent = tabContainer
             sectionFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
             sectionFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
             sectionFrame.BorderSizePixel = 0
-            sectionFrame.Position = isLeft and UDim2.new(0.0238095243, 0, 0.0344827585 + math.floor(sectionCount / 2) * 0.45, 0) or UDim2.new(0.511904776, 0, 0.0344827585 + math.floor(sectionCount / 2) * 0.45, 0)
             sectionFrame.Size = UDim2.new(0, 195, 0, 25)
+            
+            sectionFrame:SetAttribute("Side", side)
+            
+            section.frame = sectionFrame
+            section.side = side
+            
+            if isLeft then
+                table.insert(leftSections, section)
+            else
+                table.insert(rightSections, section)
+            end
+            
+            updateSectionsPositions(side)
 
             local UICorner_2 = Instance.new("UICorner")
             UICorner_2.Parent = sectionFrame
@@ -587,8 +609,9 @@ function UILibrary.new(config)
 
             local function updateSectionSize()
                 local lastZoneBottom = 20 + elementCount * 30
-                local newHeight = lastZoneBottom + 15
+                local newHeight = lastZoneBottom + 5
                 sectionFrame.Size = UDim2.new(0, 195, 0, newHeight)
+                updateSectionsPositions(side)
             end
 
             function section:CreateToggle(name, default, callback, saveId)
@@ -1584,10 +1607,10 @@ function UILibrary.new(config)
     NotifiList.Name = "NotifiList"
     NotifiList.Parent = NotifiUI
     NotifiList.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    NotifiList.BackgroundTransparency = 0.9
+    NotifiList.BackgroundTransparency = 1
     NotifiList.ZIndex = 1002
     NotifiList.BorderSizePixel = 2
-    NotifiList.BorderColor3 = Color3.fromRGB(1, 128, 203)
+    NotifiList.BorderColor3 = Color3.fromRGB(23, 23, 23)
     NotifiList.Position = settings["notifi_position"] and UDim2.new(settings["notifi_position"].X.Scale, settings["notifi_position"].X.Offset, settings["notifi_position"].Y.Scale, settings["notifi_position"].Y.Offset) or UDim2.new(0.793048978, 0, 0.74242425, 0)
     NotifiList.Size = UDim2.new(0, 250, 0, 150)
     NotifiList.ClipsDescendants = true
